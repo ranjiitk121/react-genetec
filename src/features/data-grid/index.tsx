@@ -1,4 +1,4 @@
-import { useMemo, useState, useDeferredValue } from 'react';
+import { useMemo, useRef, useState, useDeferredValue } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -17,8 +17,10 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
-import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import Popover from '@mui/material/Popover';
 import TextField from '@mui/material/TextField';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 import type { Column, SortDirection, SortState, VisibilityState } from './types';
 import { getFilteredRows, getSortedRows, isColumnVisible } from './utils';
@@ -54,6 +56,29 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const handleFilterChange = (columnId: string, value: string) => {
         setFilters((prev) => ({ ...prev, [columnId]: value }));
         setPage(0); // filtering shrinks the list — jump back so results are visible
+    };
+
+    const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null);
+    const [filterColumnId, setFilterColumnId] = useState<string | null>(null);
+    const filterOpen = Boolean(filterAnchorEl);
+    const filterInputRef = useRef<HTMLInputElement>(null);
+    const filterColumn = columns.find((c) => c.id === filterColumnId) ?? null;
+
+    const openFilter = (anchor: HTMLElement, colId: string) => {
+        setFilterColumnId(colId);
+        setFilterAnchorEl(anchor);
+    };
+    const closeFilter = () => {
+        setFilterAnchorEl(null);
+        setFilterColumnId(null);
+    };
+    const handleOpenFilterFromHeader = (
+        event: React.MouseEvent<HTMLButtonElement>,
+        colId: string,
+    ) => openFilter(event.currentTarget, colId);
+    const handleOpenFilterFromMenu = () => {
+        if (menuAnchorEl && activeColumnId) openFilter(menuAnchorEl, activeColumnId);
+        handleCloseMenu();
     };
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, colId: string) => {
@@ -137,6 +162,8 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                                 onSort={handleHeaderClick}
                                 onOpenMenu={handleOpenMenu}
                                 isMenuOpen={menuOpen && activeColumnId === col.id}
+                                hasFilter={(filters[col.id] ?? '').trim() !== ''}
+                                onOpenFilter={handleOpenFilterFromHeader}
                             />
                         ))}
                     </TableRow>
@@ -203,23 +230,11 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     <ListItemText>Sort Descending</ListItemText>
                 </MenuItem>
                 <Divider />
-                <MenuItem>
-                    <Box sx={{ px: 2, py: 1 }}>
-                        <TextField
-                            variant="standard"
-                            placeholder="Filter…"
-                            aria-label={
-                                activeColumnId
-                                    ? `Filter by ${columns.find((c) => c.id === activeColumnId)?.label ?? ''}`
-                                    : 'Filter'
-                            }
-                            value={activeColumnId ? (filters[activeColumnId] ?? '') : ''}
-                            onChange={(e) =>
-                                activeColumnId && handleFilterChange(activeColumnId, e.target.value)
-                            }
-                            onKeyDown={(e) => e.stopPropagation()}
-                        />
-                    </Box>
+                <MenuItem onClick={handleOpenFilterFromMenu}>
+                    <ListItemIcon>
+                        <FilterAltIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Filter</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={handleOpenManage}>
                     <ListItemIcon>
@@ -270,6 +285,35 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     </Button>
                 </Box>
             </Menu>
+            <Popover
+                open={filterOpen}
+                anchorEl={filterAnchorEl}
+                onClose={closeFilter}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                TransitionProps={{ onEntered: () => filterInputRef.current?.focus() }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5 }}>
+                    <TextField
+                        inputRef={filterInputRef}
+                        size="small"
+                        variant="outlined"
+                        placeholder={`Filter ${filterColumn?.label ?? ''}…`}
+                        aria-label={`Filter value for ${filterColumn?.label ?? ''}`}
+                        value={filterColumnId ? (filters[filterColumnId] ?? '') : ''}
+                        onChange={(e) =>
+                            filterColumnId && handleFilterChange(filterColumnId, e.target.value)
+                        }
+                    />
+                    <Button
+                        size="small"
+                        onClick={() => filterColumnId && handleFilterChange(filterColumnId, '')}
+                        disabled={!filterColumnId || (filters[filterColumnId] ?? '').trim() === ''}
+                    >
+                        Clear
+                    </Button>
+                </Box>
+            </Popover>
         </TableContainer>
     );
 }
