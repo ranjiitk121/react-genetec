@@ -11,8 +11,30 @@ export type PersonRow = {
     active: boolean;
 };
 
-const FIRST_NAMES = ['Alice', 'Bob', 'Carol', 'David', 'Eve', 'Frank', 'Grace', 'Heidi', 'Ivan', 'Judy'];
-const LAST_NAMES = ['Smith', 'Jones', 'Brown', 'Taylor', 'Wilson', 'Davies', 'Evans', 'Thomas', 'Roberts', 'Walker'];
+const FIRST_NAMES = [
+    'Alice',
+    'Bob',
+    'Carol',
+    'David',
+    'Eve',
+    'Frank',
+    'Grace',
+    'Heidi',
+    'Ivan',
+    'Judy',
+];
+const LAST_NAMES = [
+    'Smith',
+    'Jones',
+    'Brown',
+    'Taylor',
+    'Wilson',
+    'Davies',
+    'Evans',
+    'Thomas',
+    'Roberts',
+    'Walker',
+];
 const CITIES = ['Vienna', 'Berlin', 'London', 'Paris', 'Madrid', 'Rome', 'Oslo', 'Prague'];
 const DEPARTMENTS = ['Engineering', 'Sales', 'Marketing', 'Support', 'Finance', 'HR'];
 

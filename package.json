@@ -1,29 +1,55 @@
 {
-  "name": "react-genetec",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "typecheck": "tsc -b",
-    "lint": "oxlint",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@mui/material": "^9.5.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.6",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "@vitejs/plugin-react": "^6.1.2",
-    "oxlint": "^1.90.0",
-    "typescript": "^7.0.2",
-    "vite": "^8.3.6"
-  }
+    "name": "react-genetec",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc -b && vite build",
+        "typecheck": "tsc -b",
+        "lint": "oxlint && eslint \"src/**/*.{ts,tsx}\"",
+        "lint:imports": "eslint \"src/**/*.{ts,tsx}\" --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "preview": "vite preview",
+        "prepare": "husky"
+    },
+    "engines": {
+        "node": ">=20.19.0"
+    },
+    "lint-staged": {
+        "*.{ts,tsx}": [
+            "oxlint",
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{js,json,md,css,html}": [
+            "prettier --write"
+        ]
+    },
+    "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.1",
+        "@mui/icons-material": "^9.5.0",
+        "@mui/material": "^9.5.0",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.29.13",
+        "@babel/eslint-parser": "^7.29.13",
+        "@babel/preset-typescript": "^7.29.7",
+        "@types/node": "^26.6.6",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@vitejs/plugin-react": "^6.1.2",
+        "eslint": "^9.39.5",
+        "eslint-plugin-import": "^2.32.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.4.0",
+        "oxlint": "^1.90.0",
+        "prettier": "^3.9.10",
+        "typescript": "^7.0.2",
+        "vite": "^8.3.6"
+    }
 }
