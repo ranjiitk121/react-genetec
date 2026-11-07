@@ -1,4 +1,4 @@
-import { useMemo, useState, useDeferredValue } from 'react';
+import { useDeferredValue, useMemo, useReducer } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -7,8 +7,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-import type { Column, SortDirection, SortState, VisibilityState } from './types';
+import type { Column } from './types';
 import { getFilteredRows, getSortedRows, isColumnVisible } from './utils';
+import { gridReducer, initGridState } from './grid-reducer';
 import { ColumnHeaderCell } from './column-header-cell';
 import { GridPagination } from './grid-pagination';
 import { ColumnActionsMenu } from './column-actions-menu';
@@ -26,94 +27,19 @@ function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
 }
 
 export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTableProps<TRow>) {
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
-    const [sort, setSort] = useState<SortState>(null);
+    const [state, dispatch] = useReducer(gridReducer, undefined, initGridState);
+    const { sort, filters, visibility, page, rowsPerPage, overlay } = state;
 
-    const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
-    const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
-    const menuOpen = Boolean(menuAnchorEl);
-
-    const [visibility, setVisibility] = useState<VisibilityState>({});
-    const [manageAnchorEl, setManageAnchorEl] = useState<HTMLElement | null>(null);
-    const manageOpen = Boolean(manageAnchorEl);
-
-    const [filters, setFilters] = useState<Record<string, string>>({});
-    //TODO: premeture optimization, fix later?
+    // Keep typing responsive — the expensive filtering pass reads the deferred copy.
     const deferredFilters = useDeferredValue(filters);
 
-    const handleFilterChange = (columnId: string, value: string) => {
-        setFilters((prev) => ({ ...prev, [columnId]: value }));
-        setPage(0); // filtering shrinks the list — jump back so results are visible
-    };
-
-    const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null);
-    const [filterColumnId, setFilterColumnId] = useState<string | null>(null);
-    const filterOpen = Boolean(filterAnchorEl);
+    // Everything below is DERIVED from `overlay` — there is no separate "is open"
+    // state to keep in sync, and only one overlay can ever be open.
+    const actionsAnchorEl = overlay.kind === 'actions' ? overlay.anchorEl : null;
+    const filterAnchorEl = overlay.kind === 'filter' ? overlay.anchorEl : null;
+    const manageAnchorEl = overlay.kind === 'manage' ? overlay.anchorEl : null;
+    const filterColumnId = overlay.kind === 'filter' ? overlay.columnId : null;
     const filterColumn = columns.find((c) => c.id === filterColumnId) ?? null;
-
-    const openFilter = (anchor: HTMLElement, colId: string) => {
-        setFilterColumnId(colId);
-        setFilterAnchorEl(anchor);
-    };
-    const closeFilter = () => {
-        setFilterAnchorEl(null);
-        setFilterColumnId(null);
-    };
-    const handleOpenFilterFromHeader = (
-        event: React.MouseEvent<HTMLButtonElement>,
-        colId: string,
-    ) => openFilter(event.currentTarget, colId);
-    const handleOpenFilterFromMenu = () => {
-        if (menuAnchorEl && activeColumnId) openFilter(menuAnchorEl, activeColumnId);
-        handleCloseMenu();
-    };
-
-    const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, colId: string) => {
-        event.stopPropagation();
-        setMenuAnchorEl(event.currentTarget);
-        setActiveColumnId(colId);
-    };
-    const handleCloseMenu = () => {
-        setMenuAnchorEl(null);
-        setActiveColumnId(null);
-    };
-
-    //TODO: add proper type
-    const handleChangePage = (_event: unknown, newPage: number) => setPage(newPage);
-    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0); // avoid landing past the end after a size change
-    };
-
-    const handleHeaderClick = (columnId: string) => {
-        setSort((prev) => {
-            if (!prev || prev.columnId !== columnId) return { columnId, direction: 'asc' };
-            return { columnId, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
-        });
-    };
-    const setSortDirection = (columnId: string, direction: SortDirection) => {
-        setSort({ columnId, direction });
-    };
-
-    const handleOpenManage = () => {
-        setManageAnchorEl(menuAnchorEl); // reuse the ⋮ button as the anchor
-        handleCloseMenu();
-    };
-
-    const toggleColumnVisibility = (col: Column<TRow>) => {
-        setVisibility((prev) => ({ ...prev, [col.id]: !(prev[col.id] ?? !col.hidden) }));
-    };
-
-    const setAllVisibility = (visible: boolean) => {
-        const next: VisibilityState = {};
-        columns.forEach((col) => {
-            next[col.id] = visible;
-        });
-        setVisibility(next);
-    };
-    const resetVisibility = () => setVisibility({});
-    // TODO:
 
     const visibleColumns = useMemo(
         () => columns.filter((col) => isColumnVisible(col, visibility)),
@@ -145,11 +71,26 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                                 key={col.id}
                                 column={col}
                                 sort={sort}
-                                onSort={handleHeaderClick}
-                                onOpenMenu={handleOpenMenu}
-                                isMenuOpen={menuOpen && activeColumnId === col.id}
+                                onSort={(columnId) => dispatch({ type: 'headerClicked', columnId })}
+                                onOpenMenu={(event, colId) => {
+                                    event.stopPropagation();
+                                    dispatch({
+                                        type: 'actionsMenuOpened',
+                                        anchorEl: event.currentTarget,
+                                        columnId: colId,
+                                    });
+                                }}
+                                isMenuOpen={
+                                    overlay.kind === 'actions' && overlay.columnId === col.id
+                                }
                                 hasFilter={(filters[col.id] ?? '').trim() !== ''}
-                                onOpenFilter={handleOpenFilterFromHeader}
+                                onOpenFilter={(event, colId) =>
+                                    dispatch({
+                                        type: 'filterOpenedFromHeader',
+                                        anchorEl: event.currentTarget,
+                                        columnId: colId,
+                                    })
+                                }
                             />
                         ))}
                     </TableRow>
@@ -167,43 +108,56 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
             <GridPagination
                 count={filteredRows.length}
                 page={page}
-                onPageChange={handleChangePage}
+                onPageChange={(_event, newPage) => dispatch({ type: 'pageChanged', page: newPage })}
                 rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
+                onRowsPerPageChange={(event) =>
+                    dispatch({
+                        type: 'rowsPerPageChanged',
+                        rowsPerPage: parseInt(event.target.value, 10),
+                    })
+                }
             />
             <ColumnActionsMenu
-                anchorEl={menuAnchorEl}
-                open={menuOpen}
-                onClose={handleCloseMenu}
-                onSortAsc={() => {
-                    if (activeColumnId) setSortDirection(activeColumnId, 'asc');
-                    handleCloseMenu();
-                }}
-                onSortDesc={() => {
-                    if (activeColumnId) setSortDirection(activeColumnId, 'desc');
-                    handleCloseMenu();
-                }}
-                onFilter={handleOpenFilterFromMenu}
-                onManageColumns={handleOpenManage}
+                anchorEl={actionsAnchorEl}
+                open={overlay.kind === 'actions'}
+                onClose={() => dispatch({ type: 'overlayClosed' })}
+                onSortAsc={() => dispatch({ type: 'sortSelected', direction: 'asc' })}
+                onSortDesc={() => dispatch({ type: 'sortSelected', direction: 'desc' })}
+                onFilter={() => dispatch({ type: 'filterOpenedFromMenu' })}
+                onManageColumns={() => dispatch({ type: 'manageOpened' })}
             />
             <ManageColumnsMenu
                 anchorEl={manageAnchorEl}
-                open={manageOpen}
-                onClose={() => setManageAnchorEl(null)}
+                open={overlay.kind === 'manage'}
+                onClose={() => dispatch({ type: 'overlayClosed' })}
                 columns={columns}
                 visibility={visibility}
-                onToggleColumn={toggleColumnVisibility}
-                onSetAllVisibility={setAllVisibility}
-                onReset={resetVisibility}
+                onToggleColumn={(col) =>
+                    dispatch({ type: 'columnToggled', columnId: col.id, hidden: col.hidden })
+                }
+                onSetAllVisibility={(visible) =>
+                    dispatch({
+                        type: 'allColumnsVisibilitySet',
+                        columnIds: columns.map((c) => c.id),
+                        visible,
+                    })
+                }
+                onReset={() => dispatch({ type: 'columnVisibilityReset' })}
             />
             <FilterPopover
-                open={filterOpen}
+                open={overlay.kind === 'filter'}
                 anchorEl={filterAnchorEl}
-                onClose={closeFilter}
+                onClose={() => dispatch({ type: 'overlayClosed' })}
                 label={filterColumn?.label ?? ''}
                 value={filterColumnId ? (filters[filterColumnId] ?? '') : ''}
-                onChange={(value) => filterColumnId && handleFilterChange(filterColumnId, value)}
-                onClear={() => filterColumnId && handleFilterChange(filterColumnId, '')}
+                onChange={(value) =>
+                    filterColumnId &&
+                    dispatch({ type: 'filterChanged', columnId: filterColumnId, value })
+                }
+                onClear={() =>
+                    filterColumnId &&
+                    dispatch({ type: 'filterChanged', columnId: filterColumnId, value: '' })
+                }
             />
         </TableContainer>
     );

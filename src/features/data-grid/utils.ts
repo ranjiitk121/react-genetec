@@ -24,8 +24,20 @@ export function getSortedRows<TRow>(
     });
 }
 
+/**
+ * Single source of truth for "is this column visible right now", working from
+ * the sparse override map + the column's own `hidden` default. Both the reducer
+ * (when toggling) and the render pass (when filtering columns) call this, so the
+ * two can never disagree on what the default is.
+ */
+export const resolveVisibility = (
+    visibility: ColumnVisibility,
+    columnId: string,
+    hidden?: boolean,
+): boolean => visibility[columnId] ?? !hidden;
+
 export const isColumnVisible = <TRow>(col: Column<TRow>, visibility: ColumnVisibility): boolean =>
-    visibility[col.id] ?? !col.hidden;
+    resolveVisibility(visibility, col.id, col.hidden);
 
 function rowMatchesFilters<TRow>(
     row: TRow,
