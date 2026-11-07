@@ -23,3 +23,7 @@ export function getSortedRows<TRow>(
         return sort.direction === 'asc' ? result : -result;
     });
 }
+//TODO: add proper type
+
+export const isColumnVisible = <TRow>(col: Column<TRow>, visibility) =>
+    visibility[col.id] ?? !col.hidden;

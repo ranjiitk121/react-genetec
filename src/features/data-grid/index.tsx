@@ -14,9 +14,13 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
+import Divider from '@mui/material/Divider';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 
-import type { Column, SortDirection, SortState } from './types';
-import { getSortedRows } from './utils';
+import type { Column, SortDirection, SortState, VisibilityState } from './types';
+import { getSortedRows, isColumnVisible } from './utils';
 import { ColumnHeaderCell } from './column-header-cell';
 
 type FilterableTableProps<TRow> = {
@@ -37,6 +41,10 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
     const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
     const menuOpen = Boolean(menuAnchorEl);
+
+    const [visibility, setVisibility] = useState<VisibilityState>({});
+    const [manageAnchorEl, setManageAnchorEl] = useState<HTMLElement | null>(null);
+    const manageOpen = Boolean(manageAnchorEl);
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, colId: string) => {
         event.stopPropagation();
@@ -65,6 +73,28 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
         setSort({ columnId, direction });
     };
 
+    const handleOpenManage = () => {
+        setManageAnchorEl(menuAnchorEl); // reuse the ⋮ button as the anchor
+        handleCloseMenu();
+    };
+
+    const toggleColumnVisibility = (col: Column<TRow>) => {
+        setVisibility((prev) => ({ ...prev, [col.id]: !(prev[col.id] ?? !col.hidden) }));
+    };
+
+    const allVisible = columns.every(isColumnVisible);
+    const someVisible = columns.some(isColumnVisible);
+    const setAllVisibility = (visible: boolean) => {
+        const next: VisibilityState = {};
+        columns.forEach((col) => {
+            next[col.id] = visible;
+        });
+        setVisibility(next);
+    };
+    const resetVisibility = () => setVisibility({});
+    // TODO:
+    const visibleColumns = useMemo(() => columns.filter(isColumnVisible), [columns]);
+
     const visibleIndexStart = page * rowsPerPage;
     const visibleIndexEnd = page * rowsPerPage + rowsPerPage;
 
@@ -81,7 +111,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
             <Table aria-label={label}>
                 <TableHead>
                     <TableRow>
-                        {columns.map((col) => (
+                        {visibleColumns.map((col) => (
                             <ColumnHeaderCell
                                 key={col.id}
                                 column={col}
@@ -96,7 +126,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                 <TableBody>
                     {visibleRows.map((row) => (
                         <TableRow key={getRowKey(row)}>
-                            {columns.map((col) => (
+                            {visibleColumns.map((col) => (
                                 <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
                             ))}
                         </TableRow>
@@ -154,6 +184,54 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     </ListItemIcon>
                     <ListItemText>Sort Descending</ListItemText>
                 </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleOpenManage}>
+                    <ListItemIcon>
+                        <ViewColumnIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Manage columns</ListItemText>
+                </MenuItem>
+            </Menu>
+            <Menu
+                anchorEl={manageAnchorEl}
+                open={manageOpen}
+                onClose={() => setManageAnchorEl(null)}
+                //ADD LABEL
+            >
+                {columns.map((col) => (
+                    <MenuItem key={col.id} onClick={() => toggleColumnVisibility(col)}>
+                        <Checkbox
+                            edge="start"
+                            checked={isColumnVisible(col, visibility)}
+                            size="small"
+                            disableRipple
+                        />
+                        <ListItemText>{col.label}</ListItemText>
+                    </MenuItem>
+                ))}
+                <Divider />
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        pr: 1,
+                    }}
+                >
+                    <MenuItem sx={{ flex: 1 }} onClick={() => setAllVisibility(!allVisible)}>
+                        <Checkbox
+                            edge="start"
+                            checked={allVisible}
+                            indeterminate={someVisible && !allVisible}
+                            size="small"
+                            disableRipple
+                        />
+                        <ListItemText>Show/Hide All</ListItemText>
+                    </MenuItem>
+                    <Button size="small" onClick={resetVisibility}>
+                        RESET
+                    </Button>
+                </Box>
             </Menu>
         </TableContainer>
     );
