@@ -9,8 +9,13 @@ import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import TablePagination from '@mui/material/TablePagination';
 import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
-import type { Column, SortState } from './types';
+import type { Column, SortDirection, SortState } from './types';
 import { getSortedRows } from './utils';
 import { ColumnHeaderCell } from './column-header-cell';
 
@@ -26,7 +31,7 @@ function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
 
 export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTableProps<TRow>) {
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [rowsPerPage, setRowsPerPage] = useState(15);
     const [sort, setSort] = useState<SortState>(null);
 
     const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
@@ -55,6 +60,9 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
             if (!prev || prev.columnId !== columnId) return { columnId, direction: 'asc' };
             return { columnId, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
         });
+    };
+    const setSortDirection = (columnId: string, direction: SortDirection) => {
+        setSort({ columnId, direction });
     };
 
     const visibleIndexStart = page * rowsPerPage;
@@ -102,7 +110,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[25, 50, 100]}
+                rowsPerPageOptions={[5, 10, 25, 50, 100]}
             />
             <Box
                 sx={{
@@ -123,7 +131,30 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                 anchorEl={menuAnchorEl}
                 open={menuOpen}
                 onClose={handleCloseMenu}
-            />
+            >
+                <MenuItem
+                    onClick={() => {
+                        if (activeColumnId) setSortDirection(activeColumnId, 'asc');
+                        handleCloseMenu();
+                    }}
+                >
+                    <ListItemIcon>
+                        <ArrowUpwardIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Sort Ascending</ListItemText>
+                </MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        if (activeColumnId) setSortDirection(activeColumnId, 'desc');
+                        handleCloseMenu();
+                    }}
+                >
+                    <ListItemIcon>
+                        <ArrowDownwardIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Sort Descending</ListItemText>
+                </MenuItem>
+            </Menu>
         </TableContainer>
     );
 }
