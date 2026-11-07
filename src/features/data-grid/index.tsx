@@ -45,15 +45,16 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
         });
     };
     
+    const visibleRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+    
     return (
-
         <TableContainer component={Paper}>
             <Table aria-label={label}>
                 <TableHead>
                     <TableRow>
                           {columns.map(col => {
                             const isActive = sort?.columnId === col.id;
-                            console.log('isActive', col.sortable)
+                     
                             return (
                                 <TableCell key={col.id} sortDirection={isActive ? sort!.direction : false}>
                                     {col.sortable === false ? (
@@ -73,7 +74,7 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {rows.map(row => (
+                    {visibleRows.map(row => (
                         <TableRow key={getRowKey(row)}>
                             {columns.map(col => (
                                 <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
