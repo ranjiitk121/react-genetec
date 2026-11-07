@@ -82,8 +82,8 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
         setVisibility((prev) => ({ ...prev, [col.id]: !(prev[col.id] ?? !col.hidden) }));
     };
 
-    const allVisible = columns.every(isColumnVisible);
-    const someVisible = columns.some(isColumnVisible);
+    const allVisible = columns.every((col) => isColumnVisible(col, visibility));
+    const someVisible = columns.some((col) => isColumnVisible(col, visibility));
     const setAllVisibility = (visible: boolean) => {
         const next: VisibilityState = {};
         columns.forEach((col) => {
@@ -93,7 +93,11 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     };
     const resetVisibility = () => setVisibility({});
     // TODO:
-    const visibleColumns = useMemo(() => columns.filter(isColumnVisible), [columns]);
+
+    const visibleColumns = useMemo(
+        () => columns.filter((col) => isColumnVisible(col, visibility)),
+        [columns, visibility],
+    );
 
     const visibleIndexStart = page * rowsPerPage;
     const visibleIndexEnd = page * rowsPerPage + rowsPerPage;

@@ -1,4 +1,4 @@
-import type { Column, SortState } from './types';
+import type { Column, ColumnVisibility, SortState } from './types';
 
 export function getSortedRows<TRow>(
     rows: TRow[],
@@ -23,7 +23,6 @@ export function getSortedRows<TRow>(
         return sort.direction === 'asc' ? result : -result;
     });
 }
-//TODO: add proper type
 
-export const isColumnVisible = <TRow>(col: Column<TRow>, visibility) =>
+export const isColumnVisible = <TRow>(col: Column<TRow>, visibility: ColumnVisibility): boolean =>
     visibility[col.id] ?? !col.hidden;
