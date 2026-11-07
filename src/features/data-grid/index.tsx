@@ -5,30 +5,40 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import type {Column} from "./types";
 
 
-const rows = [
-    { id: 1, name: 'Alice', price: 42 },
-    { id: 2, name: 'Bob', price: 17 },
-    { id: 3, name: 'Carol', price: 99 },
-];
+type FilterableTableProps<TRow> = {
+    columns: Column<TRow>[];
+    rows: TRow[];
+    getRowKey: (row: TRow) => string | number;
+    label?: string;
+};
 
-export function DataGrid() {
+function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
+    return column.cell ? column.cell(row) : column.accessor(row);
+}
+
+export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTableProps<TRow>) {
     return (
- 
+
         <TableContainer component={Paper}>
-            <Table aria-label="Data table">
+            <Table aria-label={label}>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Name</TableCell>
-                        <TableCell>Price</TableCell>
+                           {columns.map(col => (
+                            <TableCell key={col.id}>{col.label}</TableCell>
+                        ))}
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {rows.map(row => (
-                        <TableRow key={row.id}>
-                            <TableCell>{row.name}</TableCell>
-                            <TableCell>{row.price}</TableCell>
+                        <TableRow key={getRowKey(row)}>
+                            {/* Body maps over the SAME columns list as the header,
+                                so cells always line up under their header. */}
+                            {columns.map(col => (
+                                <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
+                            ))}
                         </TableRow>
                     ))}
                 </TableBody>
