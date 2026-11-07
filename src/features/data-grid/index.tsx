@@ -8,7 +8,8 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import TablePagination from '@mui/material/TablePagination';
-import { TableSortLabel } from '@mui/material';
+import { IconButton, TableSortLabel } from '@mui/material';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import type { Column, SortState } from './types';
 import { getSortedRows } from './utils';
@@ -65,17 +66,31 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                                     key={col.id}
                                     sortDirection={isActive ? sort!.direction : false}
                                 >
-                                    {col.sortable === false ? (
-                                        col.label
-                                    ) : (
-                                        <TableSortLabel
-                                            active={isActive}
-                                            direction={isActive ? sort!.direction : 'asc'}
-                                            onClick={() => handleHeaderClick(col.id)}
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                        }}
+                                    >
+                                        {col.sortable === false ? (
+                                            col.label
+                                        ) : (
+                                            <TableSortLabel
+                                                active={isActive}
+                                                direction={isActive ? sort!.direction : 'asc'}
+                                                onClick={() => handleHeaderClick(col.id)}
+                                            >
+                                                {col.label}
+                                            </TableSortLabel>
+                                        )}
+                                        <IconButton
+                                            size="small"
+                                            aria-label={`Column options for ${col.label}`}
                                         >
-                                            {col.label}
-                                        </TableSortLabel>
-                                    )}
+                                            <MoreVertIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
                                 </TableCell>
                             );
                         })}
