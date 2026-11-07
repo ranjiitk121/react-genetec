@@ -6,6 +6,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import type {Column} from "./types";
+import { Box } from '@mui/material';
 
 
 type FilterableTableProps<TRow> = {
@@ -43,6 +44,20 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
                     ))}
                 </TableBody>
             </Table>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    px: 2,
+                    py: 1,
+                    borderTop: 1,
+                    borderColor: 'divider',
+                    color: 'text.secondary',
+                    fontSize: 14,
+                }}
+            >
+                {rows.length.toLocaleString()} rows
+            </Box>
         </TableContainer>
     );
 }
