@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useDeferredValue } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -18,9 +18,10 @@ import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import TextField from '@mui/material/TextField';
 
 import type { Column, SortDirection, SortState, VisibilityState } from './types';
-import { getSortedRows, isColumnVisible } from './utils';
+import { getFilteredRows, getSortedRows, isColumnVisible } from './utils';
 import { ColumnHeaderCell } from './column-header-cell';
 
 type FilterableTableProps<TRow> = {
@@ -45,6 +46,15 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const [visibility, setVisibility] = useState<VisibilityState>({});
     const [manageAnchorEl, setManageAnchorEl] = useState<HTMLElement | null>(null);
     const manageOpen = Boolean(manageAnchorEl);
+
+    const [filters, setFilters] = useState<Record<string, string>>({});
+    //TODO: premeture optimization, fix later?
+    const deferredFilters = useDeferredValue(filters);
+
+    const handleFilterChange = (columnId: string, value: string) => {
+        setFilters((prev) => ({ ...prev, [columnId]: value }));
+        setPage(0); // filtering shrinks the list — jump back so results are visible
+    };
 
     const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, colId: string) => {
         event.stopPropagation();
@@ -102,11 +112,15 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const visibleIndexStart = page * rowsPerPage;
     const visibleIndexEnd = page * rowsPerPage + rowsPerPage;
 
-    //TODO: will be recalculated on all the state changes, use Memo here
+    const filteredRows = useMemo(
+        () => getFilteredRows(rows, columns, deferredFilters),
+        [rows, columns, deferredFilters],
+    );
+
     //TODO: each column can have a custom sort? For example for Status like Error or warning and so on (need new config value for this)
     const sortedRows = useMemo(() => {
-        return getSortedRows(rows, columns, sort);
-    }, [rows, columns, sort]);
+        return getSortedRows(filteredRows, columns, sort);
+    }, [filteredRows, columns, sort]);
 
     const visibleRows = sortedRows.slice(visibleIndexStart, visibleIndexEnd);
 
@@ -139,7 +153,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
             </Table>
             <TablePagination
                 component="div"
-                count={rows.length}
+                count={filteredRows.length}
                 page={page}
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
@@ -158,7 +172,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     fontSize: 14,
                 }}
             >
-                {rows.length.toLocaleString()} rows
+                {filteredRows.length.toLocaleString()} rows
             </Box>
             <Menu
                 id="column-actions-menu"
@@ -189,6 +203,24 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     <ListItemText>Sort Descending</ListItemText>
                 </MenuItem>
                 <Divider />
+                <MenuItem>
+                    <Box sx={{ px: 2, py: 1 }}>
+                        <TextField
+                            variant="standard"
+                            placeholder="Filter…"
+                            aria-label={
+                                activeColumnId
+                                    ? `Filter by ${columns.find((c) => c.id === activeColumnId)?.label ?? ''}`
+                                    : 'Filter'
+                            }
+                            value={activeColumnId ? (filters[activeColumnId] ?? '') : ''}
+                            onChange={(e) =>
+                                activeColumnId && handleFilterChange(activeColumnId, e.target.value)
+                            }
+                            onKeyDown={(e) => e.stopPropagation()}
+                        />
+                    </Box>
+                </MenuItem>
                 <MenuItem onClick={handleOpenManage}>
                     <ListItemIcon>
                         <ViewColumnIcon fontSize="small" />
@@ -222,6 +254,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                         pr: 1,
                     }}
                 >
+                    {/* TODO: fix issue with inner menu jumping */}
                     <MenuItem sx={{ flex: 1 }} onClick={() => setAllVisibility(!allVisible)}>
                         <Checkbox
                             edge="start"

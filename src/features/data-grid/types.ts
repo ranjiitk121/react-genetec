@@ -14,3 +14,4 @@ export type SortState = { columnId: string; direction: SortDirection } | null;
 
 export type ColumnVisibility = Record<string, boolean>;
 export type VisibilityState = Record<string, boolean>;
+export type FilterState = Record<string, string>;
