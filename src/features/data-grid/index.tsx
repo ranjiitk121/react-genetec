@@ -1,5 +1,4 @@
-import type { Column } from './types';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -7,10 +6,12 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Box from "@mui/material/Box";
-import TablePagination from "@mui/material/TablePagination"
+import Box from '@mui/material/Box';
+import TablePagination from '@mui/material/TablePagination';
 import { TableSortLabel } from '@mui/material';
 
+import type { Column, SortState } from './types';
+import { getSortedRows } from './utils';
 
 type FilterableTableProps<TRow> = {
     columns: Column<TRow>[];
@@ -18,16 +19,11 @@ type FilterableTableProps<TRow> = {
     getRowKey: (row: TRow) => string | number;
     label?: string;
 };
-//Should this be tied to MUI ?
-type SortDirection = 'asc' | 'desc';
-type SortState = { columnId: string; direction: SortDirection } | null;
-
-
 function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
     return column.cell ? column.cell(row) : column.accessor(row);
 }
 
-export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTableProps<TRow>) {
+export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTableProps<TRow>) {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [sort, setSort] = useState<SortState>(null);
@@ -37,44 +33,38 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0); // avoid landing past the end after a size change
     };
-    
-     const handleHeaderClick = (columnId: string) => {
-        setSort(prev => {
+
+    const handleHeaderClick = (columnId: string) => {
+        setSort((prev) => {
             if (!prev || prev.columnId !== columnId) return { columnId, direction: 'asc' };
             return { columnId, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
         });
     };
-    
-    const visibleRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-    
+
+    const visibleIndexStart = page * rowsPerPage;
+    const visibleIndexEnd = page * rowsPerPage + rowsPerPage;
+
     //TODO: will be recalculated on all the state changes, use Memo here
     //TODO: each column can have a custom sort? For example for Status like Error or warning and so on (need new config value for this)
-    const sortedRows = sort
-      ? [...visibleRows].sort((rowA, rowB) => {
-            const columnToSortBy = columns.find(col => col.id === sort.columnId);
-            if (!columnToSortBy) return 0;
+    const sortedRows = useMemo(() => {
+        return getSortedRows(rows, columns, sort);
+    }, [rows, columns, sort]);
 
-            const valueA = columnToSortBy.accessor(rowA);
-            const valueB = columnToSortBy.accessor(rowB);
+    const visibleRows = sortedRows.slice(visibleIndexStart, visibleIndexEnd);
 
-            let result = 0;
-            if (valueA < valueB) result = -1;
-            else if (valueA > valueB) result = 1;
-            return sort.direction === 'asc' ? result : -result;
-        })
-      : rows;
-
-    
     return (
         <TableContainer component={Paper}>
             <Table aria-label={label}>
                 <TableHead>
                     <TableRow>
-                          {columns.map(col => {
+                        {columns.map((col) => {
                             const isActive = sort?.columnId === col.id;
-                     
+
                             return (
-                                <TableCell key={col.id} sortDirection={isActive ? sort!.direction : false}>
+                                <TableCell
+                                    key={col.id}
+                                    sortDirection={isActive ? sort!.direction : false}
+                                >
                                     {col.sortable === false ? (
                                         col.label
                                     ) : (
@@ -92,9 +82,9 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {sortedRows.map(row => (
+                    {visibleRows.map((row) => (
                         <TableRow key={getRowKey(row)}>
-                            {columns.map(col => (
+                            {columns.map((col) => (
                                 <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
                             ))}
                         </TableRow>

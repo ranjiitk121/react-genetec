@@ -8,3 +8,6 @@ export type Column<TRow> = {
     sortable?: boolean;
     hidden?: boolean;
 };
+
+export type SortDirection = 'asc' | 'desc';
+export type SortState = { columnId: string; direction: SortDirection } | null;
