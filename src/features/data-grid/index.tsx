@@ -8,7 +8,9 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import TablePagination from '@mui/material/TablePagination';
-import { IconButton, TableSortLabel } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 
 import type { Column, SortState } from './types';
@@ -29,6 +31,21 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const [rowsPerPage, setRowsPerPage] = useState(25);
     const [sort, setSort] = useState<SortState>(null);
 
+    const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
+    const [activeColumnId, setActiveColumnId] = useState<string | null>(null);
+    const menuOpen = Boolean(menuAnchorEl);
+
+    const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>, colId: string) => {
+        event.stopPropagation();
+        setMenuAnchorEl(event.currentTarget);
+        setActiveColumnId(colId);
+    };
+    const handleCloseMenu = () => {
+        setMenuAnchorEl(null);
+        setActiveColumnId(null);
+    };
+
+    //TODO: add proper type
     const handleChangePage = (_event: unknown, newPage: number) => setPage(newPage);
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
         setRowsPerPage(parseInt(event.target.value, 10));
@@ -60,7 +77,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     <TableRow>
                         {columns.map((col) => {
                             const isActive = sort?.columnId === col.id;
-
+                            const isMenuForThisCol = menuOpen && activeColumnId === col.id;
                             return (
                                 <TableCell
                                     key={col.id}
@@ -86,7 +103,13 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                                         )}
                                         <IconButton
                                             size="small"
+                                            onClick={(e) => handleOpenMenu(e, col.id)}
                                             aria-label={`Column options for ${col.label}`}
+                                            aria-haspopup="true"
+                                            aria-expanded={isMenuForThisCol}
+                                            aria-controls={
+                                                isMenuForThisCol ? 'column-actions-menu' : undefined
+                                            }
                                         >
                                             <MoreVertIcon fontSize="small" />
                                         </IconButton>
@@ -129,6 +152,12 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
             >
                 {rows.length.toLocaleString()} rows
             </Box>
+            <Menu
+                id="column-actions-menu"
+                anchorEl={menuAnchorEl}
+                open={menuOpen}
+                onClose={handleCloseMenu}
+            />
         </TableContainer>
     );
 }
