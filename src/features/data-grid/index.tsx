@@ -9,22 +9,18 @@ import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import Divider from '@mui/material/Divider';
 import Popover from '@mui/material/Popover';
 import TextField from '@mui/material/TextField';
-import ViewColumnIcon from '@mui/icons-material/ViewColumn';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 import type { Column, SortDirection, SortState, VisibilityState } from './types';
 import { getFilteredRows, getSortedRows, isColumnVisible } from './utils';
 import { ColumnHeaderCell } from './column-header-cell';
 import { GridPagination } from './grid-pagination';
+import { ColumnActionsMenu } from './column-actions-menu';
 
 type FilterableTableProps<TRow> = {
     columns: Column<TRow>[];
@@ -185,48 +181,21 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
             />
-            <Menu
-                id="column-actions-menu"
+            <ColumnActionsMenu
                 anchorEl={menuAnchorEl}
                 open={menuOpen}
                 onClose={handleCloseMenu}
-            >
-                <MenuItem
-                    onClick={() => {
-                        if (activeColumnId) setSortDirection(activeColumnId, 'asc');
-                        handleCloseMenu();
-                    }}
-                >
-                    <ListItemIcon>
-                        <ArrowUpwardIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Sort Ascending</ListItemText>
-                </MenuItem>
-                <MenuItem
-                    onClick={() => {
-                        if (activeColumnId) setSortDirection(activeColumnId, 'desc');
-                        handleCloseMenu();
-                    }}
-                >
-                    <ListItemIcon>
-                        <ArrowDownwardIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Sort Descending</ListItemText>
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleOpenFilterFromMenu}>
-                    <ListItemIcon>
-                        <FilterAltIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Filter</ListItemText>
-                </MenuItem>
-                <MenuItem onClick={handleOpenManage}>
-                    <ListItemIcon>
-                        <ViewColumnIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Manage columns</ListItemText>
-                </MenuItem>
-            </Menu>
+                onSortAsc={() => {
+                    if (activeColumnId) setSortDirection(activeColumnId, 'asc');
+                    handleCloseMenu();
+                }}
+                onSortDesc={() => {
+                    if (activeColumnId) setSortDirection(activeColumnId, 'desc');
+                    handleCloseMenu();
+                }}
+                onFilter={handleOpenFilterFromMenu}
+                onManageColumns={handleOpenManage}
+            />
             <Menu
                 anchorEl={manageAnchorEl}
                 open={manageOpen}
