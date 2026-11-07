@@ -1,0 +1,59 @@
+import TableCell from '@mui/material/TableCell';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+
+import type { Column, SortState } from './types';
+
+type ColumnHeaderCellProps<TRow> = {
+    column: Column<TRow>;
+    sort: SortState;
+    onSort: (columnId: string) => void;
+    onOpenMenu: (event: React.MouseEvent<HTMLButtonElement>, colId: string) => void;
+    isMenuOpen: boolean;
+};
+
+export function ColumnHeaderCell<TRow>({
+    column,
+    sort,
+    onSort,
+    onOpenMenu,
+    isMenuOpen,
+}: ColumnHeaderCellProps<TRow>) {
+    const isActive = sort?.columnId === column.id;
+
+    return (
+        <TableCell sortDirection={isActive ? sort!.direction : false}>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                }}
+            >
+                {column.sortable === false ? (
+                    column.label
+                ) : (
+                    <TableSortLabel
+                        active={isActive}
+                        direction={isActive ? sort!.direction : 'asc'}
+                        onClick={() => onSort(column.id)}
+                    >
+                        {column.label}
+                    </TableSortLabel>
+                )}
+                <IconButton
+                    size="small"
+                    onClick={(e) => onOpenMenu(e, column.id)}
+                    aria-label={`Column options for ${column.label}`}
+                    aria-haspopup="true"
+                    aria-expanded={isMenuOpen}
+                    aria-controls={isMenuOpen ? 'column-actions-menu' : undefined}
+                >
+                    <MoreVertIcon fontSize="small" />
+                </IconButton>
+            </Box>
+        </TableCell>
+    );
+}
