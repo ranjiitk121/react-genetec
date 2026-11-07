@@ -47,6 +47,24 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
     
     const visibleRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
     
+    //TODO: will be recalculated on all the state changes, use Memo here
+    //TODO: each column can have a custom sort? For example for Status like Error or warning and so on (need new config value for this)
+    const sortedRows = sort
+      ? [...visibleRows].sort((rowA, rowB) => {
+            const columnToSortBy = columns.find(col => col.id === sort.columnId);
+            if (!columnToSortBy) return 0;
+
+            const valueA = columnToSortBy.accessor(rowA);
+            const valueB = columnToSortBy.accessor(rowB);
+
+            let result = 0;
+            if (valueA < valueB) result = -1;
+            else if (valueA > valueB) result = 1;
+            return sort.direction === 'asc' ? result : -result;
+        })
+      : rows;
+
+    
     return (
         <TableContainer component={Paper}>
             <Table aria-label={label}>
@@ -74,7 +92,7 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {visibleRows.map(row => (
+                    {sortedRows.map(row => (
                         <TableRow key={getRowKey(row)}>
                             {columns.map(col => (
                                 <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
