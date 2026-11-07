@@ -1,3 +1,5 @@
+import type { Column } from './types';
+import { useState } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -5,9 +7,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import type { Column } from './types';
-import { Box, TablePagination } from '@mui/material';
-import { useState } from 'react';
+import Box from "@mui/material/Box";
+import TablePagination from "@mui/material/TablePagination"
 
 
 type FilterableTableProps<TRow> = {
@@ -45,8 +46,6 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
                 <TableBody>
                     {rows.map(row => (
                         <TableRow key={getRowKey(row)}>
-                            {/* Body maps over the SAME columns list as the header,
-                                so cells always line up under their header. */}
                             {columns.map(col => (
                                 <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
                             ))}
@@ -54,9 +53,6 @@ export function DataGrid<TRow>({columns, rows, getRowKey, label }: FilterableTab
                     ))}
                 </TableBody>
             </Table>
-            
-                  {/* component="div" so it's valid markup beside the table, not inside it.
-                count is the FULL list length -> "1–25 of 100,000" stays honest. */}
             <TablePagination
                 component="div"
                 count={rows.length}
