@@ -7,7 +7,6 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-import TablePagination from '@mui/material/TablePagination';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -25,6 +24,7 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import type { Column, SortDirection, SortState, VisibilityState } from './types';
 import { getFilteredRows, getSortedRows, isColumnVisible } from './utils';
 import { ColumnHeaderCell } from './column-header-cell';
+import { GridPagination } from './grid-pagination';
 
 type FilterableTableProps<TRow> = {
     columns: Column<TRow>[];
@@ -178,29 +178,13 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                     ))}
                 </TableBody>
             </Table>
-            <TablePagination
-                component="div"
+            <GridPagination
                 count={filteredRows.length}
                 page={page}
                 onPageChange={handleChangePage}
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={[5, 10, 25, 50, 100]}
             />
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    px: 2,
-                    py: 1,
-                    borderTop: 1,
-                    borderColor: 'divider',
-                    color: 'text.secondary',
-                    fontSize: 14,
-                }}
-            >
-                {filteredRows.length.toLocaleString()} rows
-            </Box>
             <Menu
                 id="column-actions-menu"
                 anchorEl={menuAnchorEl}
