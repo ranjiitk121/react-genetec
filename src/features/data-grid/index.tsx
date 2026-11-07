@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useDeferredValue } from 'react';
+import { useMemo, useState, useDeferredValue } from 'react';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -6,21 +6,14 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemText from '@mui/material/ListItemText';
-import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
-import Divider from '@mui/material/Divider';
-import Popover from '@mui/material/Popover';
-import TextField from '@mui/material/TextField';
 
 import type { Column, SortDirection, SortState, VisibilityState } from './types';
 import { getFilteredRows, getSortedRows, isColumnVisible } from './utils';
 import { ColumnHeaderCell } from './column-header-cell';
 import { GridPagination } from './grid-pagination';
 import { ColumnActionsMenu } from './column-actions-menu';
+import { FilterPopover } from './filter-popover';
+import { ManageColumnsMenu } from './manage-columns-menu';
 
 type FilterableTableProps<TRow> = {
     columns: Column<TRow>[];
@@ -57,7 +50,6 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(null);
     const [filterColumnId, setFilterColumnId] = useState<string | null>(null);
     const filterOpen = Boolean(filterAnchorEl);
-    const filterInputRef = useRef<HTMLInputElement>(null);
     const filterColumn = columns.find((c) => c.id === filterColumnId) ?? null;
 
     const openFilter = (anchor: HTMLElement, colId: string) => {
@@ -113,8 +105,6 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
         setVisibility((prev) => ({ ...prev, [col.id]: !(prev[col.id] ?? !col.hidden) }));
     };
 
-    const allVisible = columns.every((col) => isColumnVisible(col, visibility));
-    const someVisible = columns.some((col) => isColumnVisible(col, visibility));
     const setAllVisibility = (visible: boolean) => {
         const next: VisibilityState = {};
         columns.forEach((col) => {
@@ -196,77 +186,25 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                 onFilter={handleOpenFilterFromMenu}
                 onManageColumns={handleOpenManage}
             />
-            <Menu
+            <ManageColumnsMenu
                 anchorEl={manageAnchorEl}
                 open={manageOpen}
                 onClose={() => setManageAnchorEl(null)}
-                //ADD LABEL
-            >
-                {columns.map((col) => (
-                    <MenuItem key={col.id} onClick={() => toggleColumnVisibility(col)}>
-                        <Checkbox
-                            edge="start"
-                            checked={isColumnVisible(col, visibility)}
-                            size="small"
-                            disableRipple
-                        />
-                        <ListItemText>{col.label}</ListItemText>
-                    </MenuItem>
-                ))}
-                <Divider />
-                <Box
-                    sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        pr: 1,
-                    }}
-                >
-                    {/* TODO: fix issue with inner menu jumping */}
-                    <MenuItem sx={{ flex: 1 }} onClick={() => setAllVisibility(!allVisible)}>
-                        <Checkbox
-                            edge="start"
-                            checked={allVisible}
-                            indeterminate={someVisible && !allVisible}
-                            size="small"
-                            disableRipple
-                        />
-                        <ListItemText>Show/Hide All</ListItemText>
-                    </MenuItem>
-                    <Button size="small" onClick={resetVisibility}>
-                        RESET
-                    </Button>
-                </Box>
-            </Menu>
-            <Popover
+                columns={columns}
+                visibility={visibility}
+                onToggleColumn={toggleColumnVisibility}
+                onSetAllVisibility={setAllVisibility}
+                onReset={resetVisibility}
+            />
+            <FilterPopover
                 open={filterOpen}
                 anchorEl={filterAnchorEl}
                 onClose={closeFilter}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                TransitionProps={{ onEntered: () => filterInputRef.current?.focus() }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5 }}>
-                    <TextField
-                        inputRef={filterInputRef}
-                        size="small"
-                        variant="outlined"
-                        placeholder={`Filter ${filterColumn?.label ?? ''}…`}
-                        aria-label={`Filter value for ${filterColumn?.label ?? ''}`}
-                        value={filterColumnId ? (filters[filterColumnId] ?? '') : ''}
-                        onChange={(e) =>
-                            filterColumnId && handleFilterChange(filterColumnId, e.target.value)
-                        }
-                    />
-                    <Button
-                        size="small"
-                        onClick={() => filterColumnId && handleFilterChange(filterColumnId, '')}
-                        disabled={!filterColumnId || (filters[filterColumnId] ?? '').trim() === ''}
-                    >
-                        Clear
-                    </Button>
-                </Box>
-            </Popover>
+                label={filterColumn?.label ?? ''}
+                value={filterColumnId ? (filters[filterColumnId] ?? '') : ''}
+                onChange={(value) => filterColumnId && handleFilterChange(filterColumnId, value)}
+                onClear={() => filterColumnId && handleFilterChange(filterColumnId, '')}
+            />
         </TableContainer>
     );
 }
