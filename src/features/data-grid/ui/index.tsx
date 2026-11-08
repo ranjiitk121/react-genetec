@@ -21,13 +21,26 @@ type FilterableTableProps<TRow> = {
     rows: TRow[];
     getRowKey: (row: TRow) => string | number;
     label?: string;
+    /** Page-size choices in the "Rows per page" dropdown. */
+    rowsPerPageOptions?: number[];
+    /** Initial page size — must be one of `rowsPerPageOptions`. Defaults to the first option. */
+    defaultRowsPerPage?: number;
 };
 function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
     return column.cell ? column.cell(row) : column.accessor(row);
 }
 
-export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTableProps<TRow>) {
-    const [state, dispatch] = useReducer(gridReducer, undefined, initGridState);
+export function DataGrid<TRow>({
+    columns,
+    rows,
+    getRowKey,
+    label,
+    rowsPerPageOptions = [5, 10, 25, 50, 100],
+    defaultRowsPerPage,
+}: FilterableTableProps<TRow>) {
+    const [state, dispatch] = useReducer(gridReducer, undefined, () =>
+        initGridState(defaultRowsPerPage ?? rowsPerPageOptions[0]),
+    );
     const { sort, filters, visibility, page, rowsPerPage, overlay } = state;
 
     // Keep typing responsive — the expensive filtering pass reads the deferred copy.
@@ -49,14 +62,19 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
     const visibleIndexStart = page * rowsPerPage;
     const visibleIndexEnd = page * rowsPerPage + rowsPerPage;
 
-    const filteredRows = useMemo(
-        () => getFilteredRows(rows, columns, deferredFilters),
-        [rows, columns, deferredFilters],
-    );
+    const filteredRows = useMemo(() => {
+        //const t = performance.now();
+        const result = getFilteredRows(rows, columns, deferredFilters);
+        //  console.log(`[grid] filter ${rows.length}→${result.length} rows: ${(performance.now() - t).toFixed(2)}ms`);
+        return result;
+    }, [rows, columns, deferredFilters]);
 
     //TODO: each column can have a custom sort? For example for Status like Error or warning and so on (need new config value for this)
     const sortedRows = useMemo(() => {
-        return getSortedRows(filteredRows, columns, sort);
+        // const t = performance.now();
+        const result = getSortedRows(filteredRows, columns, sort);
+        // console.log(`[grid] sort ${filteredRows.length} rows: ${(performance.now() - t).toFixed(2)}ms`);
+        return result;
     }, [filteredRows, columns, sort]);
 
     const visibleRows = sortedRows.slice(visibleIndexStart, visibleIndexEnd);
@@ -116,6 +134,7 @@ export function DataGrid<TRow>({ columns, rows, getRowKey, label }: FilterableTa
                         rowsPerPage: parseInt(event.target.value, 10),
                     })
                 }
+                rowsPerPageOptions={rowsPerPageOptions}
             />
             <ColumnActionsMenu
                 anchorEl={actionsAnchorEl}

@@ -40,13 +40,16 @@ export type GridAction =
     | { type: 'manageOpened' }
     | { type: 'overlayClosed' };
 
-export function initGridState(overrides?: Partial<GridState>): GridState {
+// `rowsPerPage` has no default here on purpose — the initial page size comes from the
+// caller (the DataGrid `defaultRowsPerPage` / `rowsPerPageOptions` prop), so there is no
+// competing magic number baked into the reducer.
+export function initGridState(rowsPerPage: number, overrides?: Partial<GridState>): GridState {
     return {
         sort: null,
         filters: {},
         visibility: {},
         page: 0,
-        rowsPerPage: 15,
+        rowsPerPage,
         overlay: { kind: 'none' },
         ...overrides,
     };
