@@ -11,10 +11,13 @@ import type { Column } from '../shared/types';
 import { getFilteredRows, getSortedRows, isColumnVisible } from '../shared/utils';
 import { gridReducer, initGridState } from '../state/grid-reducer';
 import { ColumnHeaderCell } from './column-header-cell';
+import { GridEmptyRow } from './grid-empty-row';
 import { GridPagination } from './grid-pagination';
 import { ColumnActionsMenu } from './column-actions-menu';
 import { FilterPopover } from './filter-popover';
 import { ManageColumnsMenu } from './manage-columns-menu';
+
+export { DataGridSkeleton } from './data-grid-skeleton';
 
 type FilterableTableProps<TRow> = {
     columns: Column<TRow>[];
@@ -79,6 +82,9 @@ export function DataGrid<TRow>({
 
     const visibleRows = sortedRows.slice(visibleIndexStart, visibleIndexEnd);
 
+    const columnCount = visibleColumns.length;
+    const hasActiveFilter = Object.values(filters).some((value) => (value ?? '').trim() !== '');
+
     return (
         <TableContainer component={Paper}>
             <Table aria-label={label}>
@@ -114,13 +120,17 @@ export function DataGrid<TRow>({
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {visibleRows.map((row) => (
-                        <TableRow key={getRowKey(row)}>
-                            {visibleColumns.map((col) => (
-                                <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
+                    {visibleRows.length === 0 ? (
+                        <GridEmptyRow columnCount={columnCount} filtered={hasActiveFilter} />
+                    ) : (
+                        visibleRows.map((row) => (
+                            <TableRow key={getRowKey(row)}>
+                                {visibleColumns.map((col) => (
+                                    <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    )}
                 </TableBody>
             </Table>
             <GridPagination
