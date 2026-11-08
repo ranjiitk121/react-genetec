@@ -6,8 +6,8 @@ import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
-import type { Column, VisibilityState } from './types';
-import { isColumnVisible } from './utils';
+import type { Column, VisibilityState } from '../shared/types';
+import { isColumnVisible } from '../shared/utils';
 
 type ManageColumnsMenuProps<TRow> = {
     anchorEl: HTMLElement | null;

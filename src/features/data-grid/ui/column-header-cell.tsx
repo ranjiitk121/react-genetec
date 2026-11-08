@@ -6,7 +6,7 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
-import type { Column, SortState } from './types';
+import type { Column, SortState } from '../shared/types';
 
 type ColumnHeaderCellProps<TRow> = {
     column: Column<TRow>;

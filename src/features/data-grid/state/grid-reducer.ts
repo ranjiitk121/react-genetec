@@ -1,7 +1,7 @@
 // The DataGrid's view-state as an event-driven reducer. Design rationale in NOTES.md.
 
-import { resolveVisibility } from './utils';
-import type { FilterState, SortDirection, SortState, VisibilityState } from './types';
+import { resolveVisibility } from '../shared/utils';
+import type { FilterState, SortDirection, SortState, VisibilityState } from '../shared/types';
 
 // The single mutually-exclusive overlay — only one menu/popover can be open.
 export type Overlay =

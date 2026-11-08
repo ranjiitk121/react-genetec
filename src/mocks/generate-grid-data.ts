@@ -1,4 +1,4 @@
-import type { Column } from '../features/data-grid/types';
+import type { Column } from '../features/data-grid';
 
 export type PersonRow = {
     id: number;
