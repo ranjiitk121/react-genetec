@@ -1,21 +1,25 @@
-import { useQuery } from '@tanstack/react-query';
+//import { useQuery } from '@tanstack/react-query';
 
-import { DataGrid, DataGridSkeleton } from './features/data-grid';
-import { QueryBoundary } from './components/query-boundary';
-import { personColumns, type PersonRow } from './mocks/generate-grid-data';
-import { fetchPeople } from './mocks/fetch-people';
+// import { DataGrid, DataGridSkeleton } from './features/data-grid';
+// import { QueryBoundary } from './components/query-boundary';
+// import { personColumns, type PersonRow } from './mocks/generate-grid-data';
+// import { fetchPeople } from './mocks/fetch-people';
+import { Timeline } from './features/timeline';
+import { timelineEvents } from './mocks/generate-timeline-data';
 
 function App() {
     // TODO: dev controls to toggle loading/empty/error states were removed for now — revisit
     // with a proper debug UI (see fetchPeople's `count` / `fail` params).
-    const { status, data, error, refetch } = useQuery({
-        queryKey: ['people'],
-        queryFn: () => fetchPeople({ count: 200_000 }),
-    });
+    // const { status, data, error, refetch } = useQuery({
+    //     queryKey: ['people'],
+    //     queryFn: () => fetchPeople({ count: 200_000 }),
+    // });
 
     return (
         <section id="center">
-            <QueryBoundary
+            <Timeline events={timelineEvents} />
+            {/* {
+                false && <QueryBoundary
                 status={status}
                 error={error}
                 onRetry={() => refetch()}
@@ -30,6 +34,7 @@ function App() {
                     defaultRowsPerPage={10}
                 />
             </QueryBoundary>
+            } */}
         </section>
     );
 }

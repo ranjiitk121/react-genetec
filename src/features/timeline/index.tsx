@@ -1,3 +1,5 @@
+export { Timeline } from './ui';
+
 export type {
     EventStatus,
     TimelineEvent,
