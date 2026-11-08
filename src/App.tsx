@@ -4,17 +4,26 @@
 // import { QueryBoundary } from './components/query-boundary';
 // import { personColumns, type PersonRow } from './mocks/generate-grid-data';
 // import { fetchPeople } from './mocks/fetch-people';
-import { useMemo } from 'react';
+import { useRef, useState } from 'react';
 
-import { Timeline } from './features/timeline';
+import { EventForm, type EventFormValues } from './features/event-form';
+import { Timeline, type TimelineEvent } from './features/timeline';
 import { generateTimelineEvents } from './mocks/generate-timeline-data';
 
 function App() {
-    // Stress the virtualizer: 100k events built once (not per render).
-    const events = useMemo(() => generateTimelineEvents(200_000), []);
+    const [events, setEvents] = useState<TimelineEvent[]>(() => generateTimelineEvents(200_000));
+
+    // The form emits a draft without an id; App owns the id scheme (unique + sortable).
+    const nextId = useRef(0);
+
+    function addEvent(values: EventFormValues) {
+        const event: TimelineEvent = { id: `new-${nextId.current++}`, ...values };
+        setEvents((prev) => [event, ...prev]);
+    }
 
     return (
         <section id="center">
+            <EventForm onSave={addEvent} onCancel={() => {}} />
             <Timeline events={events} />
             {/* {
                 false && <QueryBoundary

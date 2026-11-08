@@ -26,10 +26,14 @@ function isEventStatus(value: string): value is EventStatus {
 type EventFormProps = {
     onSave: (values: EventFormValues) => void;
     onCancel: () => void;
+    initialValues?: EventFormValues;
 };
 
-export function EventForm({ onSave, onCancel }: EventFormProps) {
-    const [draft, setDraft] = useState<EventFormValues>(EMPTY_DRAFT);
+export function EventForm({ onSave, onCancel, initialValues }: EventFormProps) {
+    const seed = initialValues ?? EMPTY_DRAFT;
+    const isEdit = initialValues !== undefined;
+
+    const [draft, setDraft] = useState<EventFormValues>(seed);
     const [errors, setErrors] = useState<FormErrors>({});
     const [savedMessage, setSavedMessage] = useState('');
 
@@ -43,7 +47,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
     }
 
     function reset() {
-        setDraft(EMPTY_DRAFT);
+        setDraft(seed);
         setErrors({});
     }
 
@@ -62,7 +66,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
 
         onSave(draft);
         reset();
-        setSavedMessage('Event saved.');
+        setSavedMessage(isEdit ? 'Event updated.' : 'Event saved.');
     }
 
     function handleCancel() {
@@ -73,7 +77,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
 
     return (
         <Box component="form" onSubmit={handleSubmit} noValidate>
-            <Typography variant="h6">New Event</Typography>
+            <Typography variant="h6">{isEdit ? 'Edit Event' : 'New Event'}</Typography>
             <Stack spacing={2}>
                 <TextField
                     label="Title"
@@ -119,7 +123,7 @@ export function EventForm({ onSave, onCancel }: EventFormProps) {
                     Save
                 </Button>
             </Stack>
-            <Box output="status" aria-live="polite" sx={{ color: 'success.main', minHeight: 24 }}>
+            <Box component="output" sx={{ color: 'success.main', minHeight: 24 }}>
                 {savedMessage}
             </Box>
         </Box>
