@@ -9,19 +9,23 @@ export function getSortedRows<TRow>(
         return rows;
     }
 
-    //TODO: custom sort.
-    return rows.toSorted((rowA, rowB) => {
-        const columnToSortBy = columns.find((col) => col.id === sort.columnId);
-        if (!columnToSortBy) return 0;
+    // Resolve the sort column ONCE — not inside the comparator, which runs ~n·log n
+    // times (~20M for 1M rows). Re-finding it per comparison is what froze the tab.
+    const columnToSortBy = columns.find((col) => col.id === sort.columnId);
+    if (!columnToSortBy) return rows;
 
-        const valueA = columnToSortBy.accessor(rowA);
-        const valueB = columnToSortBy.accessor(rowB);
-
-        let result = 0;
-        if (valueA < valueB) result = -1;
-        else if (valueA > valueB) result = 1;
-        return sort.direction === 'asc' ? result : -result;
+    // Decorate-sort-undecorate: compute each row's sort key ONCE (O(n) accessor calls)
+    // instead of 2× per comparison (O(n·log n)). The comparator then only compares
+    // precomputed primitives.
+    // NOTE: single-column only. Multi-column sort is unsupported by design — see NOTES.md.
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    const decorated = rows.map((row) => ({ row, key: columnToSortBy.accessor(row) }));
+    decorated.sort((a, b) => {
+        if (a.key < b.key) return -dir;
+        if (a.key > b.key) return dir;
+        return 0;
     });
+    return decorated.map((d) => d.row);
 }
 
 /**
