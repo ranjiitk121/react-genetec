@@ -23,9 +23,15 @@ function isEventStatus(value: string): value is EventStatus {
     return STATUS_OPTIONS.some((option) => option.value === value);
 }
 
-export function EventForm() {
+type EventFormProps = {
+    onSave: (values: EventFormValues) => void;
+    onCancel: () => void;
+};
+
+export function EventForm({ onSave, onCancel }: EventFormProps) {
     const [draft, setDraft] = useState<EventFormValues>(EMPTY_DRAFT);
     const [errors, setErrors] = useState<FormErrors>({});
+    const [savedMessage, setSavedMessage] = useState('');
 
     const titleRef = useRef<HTMLInputElement>(null);
     const dateRef = useRef<HTMLInputElement>(null);
@@ -33,10 +39,17 @@ export function EventForm() {
 
     function updateField<K extends keyof EventFormValues>(field: K, value: EventFormValues[K]) {
         setDraft((prev) => ({ ...prev, [field]: value }));
+        setSavedMessage('');
+    }
+
+    function reset() {
+        setDraft(EMPTY_DRAFT);
+        setErrors({});
     }
 
     function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
         event.preventDefault();
+        setSavedMessage('');
 
         const nextErrors = validate(draft);
         setErrors(nextErrors);
@@ -46,6 +59,16 @@ export function EventForm() {
             fieldRefs[firstInvalid].current?.focus();
             return;
         }
+
+        onSave(draft);
+        reset();
+        setSavedMessage('Event saved.');
+    }
+
+    function handleCancel() {
+        reset();
+        setSavedMessage('');
+        onCancel();
     }
 
     return (
@@ -89,11 +112,16 @@ export function EventForm() {
                 </TextField>
             </Stack>
             <Stack direction="row" spacing={1}>
-                <Button type="button">Cancel</Button>
+                <Button type="button" onClick={handleCancel}>
+                    Cancel
+                </Button>
                 <Button type="submit" variant="contained">
                     Save
                 </Button>
             </Stack>
+            <Box output="status" aria-live="polite" sx={{ color: 'success.main', minHeight: 24 }}>
+                {savedMessage}
+            </Box>
         </Box>
     );
 }
