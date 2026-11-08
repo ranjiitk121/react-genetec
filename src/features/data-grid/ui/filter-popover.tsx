@@ -32,7 +32,7 @@ export function FilterPopover({
             onClose={onClose}
             anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-            TransitionProps={{ onEntered: () => inputRef.current?.focus() }}
+            slotProps={{ transition: { onEntered: () => inputRef.current?.focus() } }}
         >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5 }}>
                 <TextField
