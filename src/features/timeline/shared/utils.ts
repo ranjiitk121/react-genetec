@@ -1,4 +1,4 @@
-import type { TimelineEvent, TimelineGroup } from './types';
+import type { EventStatus, TimelineEvent, TimelineGroup } from './types';
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
@@ -27,3 +27,10 @@ export function groupEventsByDay(events: TimelineEvent[]): TimelineGroup[] {
     groups.sort((a, b) => (a.dayKey < b.dayKey ? 1 : a.dayKey > b.dayKey ? -1 : 0));
     return groups;
 }
+
+// Status -> MUI palette colour. Record<> forces an entry for every status.
+export const STATUS_COLOR_MAP: Record<EventStatus, string> = {
+    completed: 'success.main', // green
+    initiated: 'secondary.main', // purple
+    started: 'error.main', // red
+};

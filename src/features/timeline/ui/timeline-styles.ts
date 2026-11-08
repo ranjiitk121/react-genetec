@@ -1,12 +1,7 @@
-// All the Timeline's sx lives here so the component reads as structure, not styling.
-// Theme tokens ('divider', 'text.primary', spacing numbers) resolve through the theme,
-// same as inline sx — we've just given each blob a name and a home.
-
 import type { SxProps, Theme } from '@mui/material/styles';
 
 import type { EventStatus } from '../shared/types';
 
-// Status -> MUI palette colour. Record<> forces an entry for every status.
 export const STATUS_COLOR_MAP: Record<EventStatus, string> = {
     completed: 'success.main', // green
     initiated: 'secondary.main', // purple

@@ -5,8 +5,8 @@ import Paper from '@mui/material/Paper';
 
 import type { TimelineEvent } from '../shared/types';
 import { groupEventsByDay } from '../shared/utils';
+import { paperSx } from './index.styles';
 import { TimelineRow } from './timeline-row';
-import { paperSx } from './timeline-styles';
 
 // Exact per-row height, measured against the DOM: 1 event = 78px, 2 = 140px, 3 = 202px.
 // An exact estimate keeps measureElement from causing a visible correction on fast scroll.
