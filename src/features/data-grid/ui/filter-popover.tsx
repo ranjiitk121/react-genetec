@@ -4,6 +4,7 @@ import Button from '@mui/material/Button';
 import Popover from '@mui/material/Popover';
 import TextField from '@mui/material/TextField';
 
+//TODO: can we allow to export this type to extentsibility, which type should be exposed way.
 type FilterPopoverProps = {
     open: boolean;
     anchorEl: HTMLElement | null;
