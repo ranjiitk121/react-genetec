@@ -43,6 +43,18 @@ export const resolveVisibility = (
 export const isColumnVisible = <TRow>(col: Column<TRow>, visibility: ColumnVisibility): boolean =>
     resolveVisibility(visibility, col.id, col.hidden);
 
+export const getVisibleColumns = <TRow>(
+    columns: Column<TRow>[],
+    visibility: ColumnVisibility,
+): Column<TRow>[] => columns.filter((col) => isColumnVisible(col, visibility));
+
+/** Slice out the rows for the current page. */
+export const paginate = <TRow>(rows: TRow[], page: number, rowsPerPage: number): TRow[] =>
+    rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+
+export const hasActiveFilters = (filters: FilterState): boolean =>
+    Object.values(filters).some((value) => (value ?? '').trim() !== '');
+
 function rowMatchesFilters<TRow>(
     row: TRow,
     columns: Column<TRow>[],

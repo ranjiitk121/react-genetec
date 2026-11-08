@@ -1,17 +1,20 @@
 import { useDeferredValue, useMemo, useReducer } from 'react';
 import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
 import type { Column } from '../shared/types';
-import { getFilteredRows, getSortedRows, isColumnVisible } from '../shared/utils';
+import {
+    getFilteredRows,
+    getSortedRows,
+    getVisibleColumns,
+    hasActiveFilters,
+    paginate,
+} from '../shared/utils';
 import { gridReducer, initGridState } from '../state/grid-reducer';
-import { ColumnHeaderCell } from './column-header-cell';
-import { GridEmptyRow } from './grid-empty-row';
+import { selectOverlay } from '../state/grid-selectors';
+import { GridHeader } from './grid-header';
+import { GridBody } from './grid-body';
 import { GridPagination } from './grid-pagination';
 import { ColumnActionsMenu } from './column-actions-menu';
 import { FilterPopover } from './filter-popover';
@@ -29,9 +32,6 @@ type FilterableTableProps<TRow> = {
     /** Initial page size — must be one of `rowsPerPageOptions`. Defaults to the first option. */
     defaultRowsPerPage?: number;
 };
-function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
-    return column.cell ? column.cell(row) : column.accessor(row);
-}
 
 export function DataGrid<TRow>({
     columns,
@@ -44,99 +44,73 @@ export function DataGrid<TRow>({
     const [state, dispatch] = useReducer(gridReducer, undefined, () =>
         initGridState(defaultRowsPerPage ?? rowsPerPageOptions[0]),
     );
-    const { sort, filters, visibility, page, rowsPerPage, overlay } = state;
+    const { sort, filters, visibility, page, rowsPerPage } = state;
 
-    // Keep typing responsive — the expensive filtering pass reads the deferred copy.
+    // Derived view — each line is a pure call; see shared/utils.ts and state/grid-selectors.ts.
+    // Keep typing responsive: the expensive filtering pass reads the deferred filters.
     const deferredFilters = useDeferredValue(filters);
-
-    // Everything below is DERIVED from `overlay` — there is no separate "is open"
-    // state to keep in sync, and only one overlay can ever be open.
-    const actionsAnchorEl = overlay.kind === 'actions' ? overlay.anchorEl : null;
-    const filterAnchorEl = overlay.kind === 'filter' ? overlay.anchorEl : null;
-    const manageAnchorEl = overlay.kind === 'manage' ? overlay.anchorEl : null;
-    const filterColumnId = overlay.kind === 'filter' ? overlay.columnId : null;
-    const filterColumn = columns.find((c) => c.id === filterColumnId) ?? null;
-
     const visibleColumns = useMemo(
-        () => columns.filter((col) => isColumnVisible(col, visibility)),
+        () => getVisibleColumns(columns, visibility),
         [columns, visibility],
     );
+    const filteredRows = useMemo(
+        () => getFilteredRows(rows, columns, deferredFilters),
+        [rows, columns, deferredFilters],
+    );
+    const sortedRows = useMemo(
+        () => getSortedRows(filteredRows, columns, sort),
+        [filteredRows, columns, sort],
+    );
+    const visibleRows = paginate(sortedRows, page, rowsPerPage);
+    const overlay = selectOverlay(state.overlay, columns);
+    const hasActiveFilter = hasActiveFilters(filters);
 
-    const visibleIndexStart = page * rowsPerPage;
-    const visibleIndexEnd = page * rowsPerPage + rowsPerPage;
-
-    const filteredRows = useMemo(() => {
-        //const t = performance.now();
-        const result = getFilteredRows(rows, columns, deferredFilters);
-        //  console.log(`[grid] filter ${rows.length}→${result.length} rows: ${(performance.now() - t).toFixed(2)}ms`);
-        return result;
-    }, [rows, columns, deferredFilters]);
-
-    //TODO: each column can have a custom sort? For example for Status like Error or warning and so on (need new config value for this)
-    const sortedRows = useMemo(() => {
-        // const t = performance.now();
-        const result = getSortedRows(filteredRows, columns, sort);
-        // console.log(`[grid] sort ${filteredRows.length} rows: ${(performance.now() - t).toFixed(2)}ms`);
-        return result;
-    }, [filteredRows, columns, sort]);
-
-    const visibleRows = sortedRows.slice(visibleIndexStart, visibleIndexEnd);
-
-    const columnCount = visibleColumns.length;
-    const hasActiveFilter = Object.values(filters).some((value) => (value ?? '').trim() !== '');
+    // Event handlers — thin wrappers over `dispatch`. Business rules live in the reducer.
+    const closeOverlay = () => dispatch({ type: 'overlayClosed' });
+    const changeFilter = (value: string) => {
+        if (overlay.filterColumnId) {
+            dispatch({ type: 'filterChanged', columnId: overlay.filterColumnId, value });
+        }
+    };
 
     return (
         <TableContainer component={Paper}>
             <Table aria-label={label}>
-                <TableHead>
-                    <TableRow>
-                        {visibleColumns.map((col) => (
-                            <ColumnHeaderCell
-                                key={col.id}
-                                column={col}
-                                sort={sort}
-                                onSort={(columnId) => dispatch({ type: 'headerClicked', columnId })}
-                                onOpenMenu={(event, colId) => {
-                                    event.stopPropagation();
-                                    dispatch({
-                                        type: 'actionsMenuOpened',
-                                        anchorEl: event.currentTarget,
-                                        columnId: colId,
-                                    });
-                                }}
-                                isMenuOpen={
-                                    overlay.kind === 'actions' && overlay.columnId === col.id
-                                }
-                                hasFilter={(filters[col.id] ?? '').trim() !== ''}
-                                onOpenFilter={(event, colId) =>
-                                    dispatch({
-                                        type: 'filterOpenedFromHeader',
-                                        anchorEl: event.currentTarget,
-                                        columnId: colId,
-                                    })
-                                }
-                            />
-                        ))}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {visibleRows.length === 0 ? (
-                        <GridEmptyRow columnCount={columnCount} filtered={hasActiveFilter} />
-                    ) : (
-                        visibleRows.map((row) => (
-                            <TableRow key={getRowKey(row)}>
-                                {visibleColumns.map((col) => (
-                                    <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
-                                ))}
-                            </TableRow>
-                        ))
-                    )}
-                </TableBody>
+                <GridHeader
+                    columns={visibleColumns}
+                    sort={sort}
+                    filters={filters}
+                    activeActionsColumnId={overlay.activeActionsColumnId}
+                    onSort={(columnId) => dispatch({ type: 'headerClicked', columnId })}
+                    onOpenMenu={(event, columnId) => {
+                        event.stopPropagation();
+                        dispatch({
+                            type: 'actionsMenuOpened',
+                            anchorEl: event.currentTarget,
+                            columnId,
+                        });
+                    }}
+                    onOpenFilter={(event, columnId) =>
+                        dispatch({
+                            type: 'filterOpenedFromHeader',
+                            anchorEl: event.currentTarget,
+                            columnId,
+                        })
+                    }
+                />
+                <GridBody
+                    columns={visibleColumns}
+                    rows={visibleRows}
+                    getRowKey={getRowKey}
+                    hasActiveFilter={hasActiveFilter}
+                />
             </Table>
             <GridPagination
                 count={filteredRows.length}
                 page={page}
-                onPageChange={(_event, newPage) => dispatch({ type: 'pageChanged', page: newPage })}
+                onPageChange={(_event, nextPage) =>
+                    dispatch({ type: 'pageChanged', page: nextPage })
+                }
                 rowsPerPage={rowsPerPage}
                 onRowsPerPageChange={(event) =>
                     dispatch({
@@ -147,18 +121,18 @@ export function DataGrid<TRow>({
                 rowsPerPageOptions={rowsPerPageOptions}
             />
             <ColumnActionsMenu
-                anchorEl={actionsAnchorEl}
-                open={overlay.kind === 'actions'}
-                onClose={() => dispatch({ type: 'overlayClosed' })}
+                anchorEl={overlay.actionsAnchorEl}
+                open={overlay.isActionsOpen}
+                onClose={closeOverlay}
                 onSortAsc={() => dispatch({ type: 'sortSelected', direction: 'asc' })}
                 onSortDesc={() => dispatch({ type: 'sortSelected', direction: 'desc' })}
                 onFilter={() => dispatch({ type: 'filterOpenedFromMenu' })}
                 onManageColumns={() => dispatch({ type: 'manageOpened' })}
             />
             <ManageColumnsMenu
-                anchorEl={manageAnchorEl}
-                open={overlay.kind === 'manage'}
-                onClose={() => dispatch({ type: 'overlayClosed' })}
+                anchorEl={overlay.manageAnchorEl}
+                open={overlay.isManageOpen}
+                onClose={closeOverlay}
                 columns={columns}
                 visibility={visibility}
                 onToggleColumn={(col) =>
@@ -174,19 +148,13 @@ export function DataGrid<TRow>({
                 onReset={() => dispatch({ type: 'columnVisibilityReset' })}
             />
             <FilterPopover
-                open={overlay.kind === 'filter'}
-                anchorEl={filterAnchorEl}
-                onClose={() => dispatch({ type: 'overlayClosed' })}
-                label={filterColumn?.label ?? ''}
-                value={filterColumnId ? (filters[filterColumnId] ?? '') : ''}
-                onChange={(value) =>
-                    filterColumnId &&
-                    dispatch({ type: 'filterChanged', columnId: filterColumnId, value })
-                }
-                onClear={() =>
-                    filterColumnId &&
-                    dispatch({ type: 'filterChanged', columnId: filterColumnId, value: '' })
-                }
+                open={overlay.isFilterOpen}
+                anchorEl={overlay.filterAnchorEl}
+                onClose={closeOverlay}
+                label={overlay.filterColumn?.label ?? ''}
+                value={overlay.filterColumnId ? (filters[overlay.filterColumnId] ?? '') : ''}
+                onChange={changeFilter}
+                onClear={() => changeFilter('')}
             />
         </TableContainer>
     );

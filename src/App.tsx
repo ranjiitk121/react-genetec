@@ -10,7 +10,7 @@ function App() {
     // with a proper debug UI (see fetchPeople's `count` / `fail` params).
     const { status, data, error, refetch } = useQuery({
         queryKey: ['people'],
-        queryFn: () => fetchPeople({ count: 100_000 }),
+        queryFn: () => fetchPeople({ count: 200_000 }),
     });
 
     return (
