@@ -11,6 +11,7 @@ export function getSortedRows<TRow>(
 
     // Resolve the sort column ONCE — not inside the comparator, which runs ~n·log n
     // times (~20M for 1M rows). Re-finding it per comparison is what froze the tab.
+    // Throw Error when columnToSortBy.
     const columnToSortBy = columns.find((col) => col.id === sort.columnId);
     if (!columnToSortBy) return rows;
 

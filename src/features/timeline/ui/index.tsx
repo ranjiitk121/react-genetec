@@ -1,52 +1,104 @@
-import { useMemo, useRef } from 'react';
+/* oxlint-disable jsx-a11y/prefer-tag-over-role */
+import { useCallback, useEffect, useMemo, useReducer, useRef, type KeyboardEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 
-import type { TimelineEvent } from '../shared/types';
-import { groupEventsByDay } from '../shared/utils';
+import type { Direction, TimelineEvent } from '../shared/types';
+import { groupEventsByDay, nextFocusPosition } from '../shared/utils';
+import { initTimelineState, timelineReducer } from '../state/timeline-reducer';
 import { paperSx } from './index.styles';
 import { TimelineRow } from './timeline-row';
 
-// Exact per-row height, measured against the DOM: 1 event = 78px, 2 = 140px, 3 = 202px.
-// An exact estimate keeps measureElement from causing a visible correction on fast scroll.
-const PADDING = 24; // the row's bottom padding, present at any event count
-const PER_EVENT = 54; // one event block (its title + status line)
-const GAP = 8; // space BETWEEN two events; there are (events − 1) of them
-
-// Extra rows rendered above/below the viewport. Higher = fewer blank frames on fast scroll.
+// Exact per-row height: PADDING + events × PER_EVENT + (events − 1) × GAP.
+const PADDING = 24;
+const PER_EVENT = 54;
+const GAP = 8;
 const OVERSCAN = 20;
+
+const KEY_TO_DIRECTION: Record<string, Direction> = {
+    ArrowUp: 'up',
+    ArrowDown: 'down',
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+};
 
 type TimelineProps = {
     events: TimelineEvent[];
 };
 
 export function Timeline({ events }: TimelineProps) {
-    // Memoised: the virtualizer re-renders on every scroll, and re-grouping 100k events each
-    // frame would jank. Recompute only when the events array identity changes.
     const groups = useMemo(() => groupEventsByDay(events), [events]);
+    const groupSizes = useMemo(() => groups.map((group) => group.events.length), [groups]);
 
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const rowHeight = (index: number) => {
-        const count = groups[index].events.length;
-        return PADDING + count * PER_EVENT + (count - 1) * GAP;
-    };
-
-    // TanStack Virtual's API can't be memoized by React Compiler; it opts this hook out safely.
     // oxlint-disable-next-line react/incompatible-library
     const virtualizer = useVirtualizer({
         count: groups.length,
         getScrollElement: () => scrollRef.current,
-        estimateSize: rowHeight,
+        estimateSize: (index) => {
+            const count = groupSizes[index];
+            return PADDING + count * PER_EVENT + (count - 1) * GAP;
+        },
         overscan: OVERSCAN,
     });
 
+    const [state, dispatch] = useReducer(timelineReducer, undefined, initTimelineState);
+    const { focus } = state;
+
+    // Focus the keyboard target once it mounts: set here, consumed by focusCursorItem.
+    const pendingKeyboardFocus = useRef(false);
+
+    const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        const direction = KEY_TO_DIRECTION[event.key];
+        if (!direction) return;
+        event.preventDefault();
+
+        const target = nextFocusPosition(groupSizes, focus, direction);
+        if (target === focus) return;
+
+        pendingKeyboardFocus.current = true;
+        virtualizer.scrollToIndex(target.groupIndex, { align: 'auto' });
+        dispatch({ type: 'navigated', direction, groupSizes });
+    };
+
+    const handleItemFocus = useCallback((groupIndex: number, itemIndex: number) => {
+        dispatch({ type: 'focused', position: { groupIndex, itemIndex } });
+    }, []);
+
+    useEffect(() => {
+        dispatch({ type: 'groupsChanged', groupSizes });
+    }, [groupSizes]);
+
+    const focusCursorItem = useCallback((el: HTMLDivElement | null) => {
+        if (el && pendingKeyboardFocus.current) {
+            el.focus({ preventScroll: true });
+            pendingKeyboardFocus.current = false;
+        }
+    }, []);
+
+    const virtualItems = virtualizer.getVirtualItems();
+
+    // One tabbable item among rendered rows: the cursor, or the first visible row if it scrolled off.
+    const focusRendered = virtualItems.some((row) => row.index === focus.groupIndex);
+    const tabStop = focusRendered
+        ? focus
+        : { groupIndex: virtualItems[0]?.index ?? focus.groupIndex, itemIndex: 0 };
+
     return (
-        <Paper ref={scrollRef} sx={paperSx}>
-            {/* Spacer sized to the whole list; rendered rows are absolutely positioned inside it. */}
-            <Box sx={{ position: 'relative', height: virtualizer.getTotalSize() }}>
-                {virtualizer.getVirtualItems().map((virtualRow) => (
+        <Paper
+            ref={scrollRef}
+            sx={paperSx}
+            role="list"
+            aria-label={`Event timeline, ${groups.length} days`}
+            onKeyDown={handleKeyDown}
+        >
+            <Box
+                role="presentation"
+                sx={{ position: 'relative', height: virtualizer.getTotalSize() }}
+            >
+                {virtualItems.map((virtualRow) => (
                     <TimelineRow
                         key={groups[virtualRow.index].dayKey}
                         index={virtualRow.index}
@@ -55,6 +107,14 @@ export function Timeline({ events }: TimelineProps) {
                         isFirst={virtualRow.index === 0}
                         isLast={virtualRow.index === groups.length - 1}
                         measureRef={virtualizer.measureElement}
+                        tabbableItemIndex={
+                            tabStop.groupIndex === virtualRow.index ? tabStop.itemIndex : -1
+                        }
+                        cursorItemIndex={
+                            focus.groupIndex === virtualRow.index ? focus.itemIndex : -1
+                        }
+                        cursorRef={focusCursorItem}
+                        onItemFocus={handleItemFocus}
                     />
                 ))}
             </Box>

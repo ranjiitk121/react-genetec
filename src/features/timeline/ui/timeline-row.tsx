@@ -1,23 +1,24 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role */
 import { memo, type CSSProperties } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import type { TimelineGroup } from '../shared/types';
+import { eventAriaLabel } from '../shared/utils';
 import {
     dateSx,
     dotSx,
+    eventItemSx,
     eventsSx,
     lineSx,
     markerColumnSx,
     rowSx,
     statusSx,
     titleSx,
-} from './timeline-styles';
+} from './timeline-row.styles';
 
-// Positioning wrapper style, hoisted so it isn't re-created per row per render (the transform,
-// which changes per row, is spread on at render time). `contain` isolates each row's layout/paint;
-// `will-change: transform` keeps the translateY on the compositor.
+// Hoisted so it isn't recreated per row; the per-row transform is added at render time.
 const rowWrapperBaseStyle: CSSProperties = {
     position: 'absolute',
     top: 0,
@@ -34,11 +35,13 @@ type TimelineRowProps = {
     isFirst: boolean;
     isLast: boolean;
     measureRef: (el: Element | null) => void;
+    tabbableItemIndex: number; // item with roving tabIndex=0, else -1
+    cursorItemIndex: number; // item the keyboard cursor is on, else -1
+    cursorRef: (el: HTMLDivElement | null) => void;
+    onItemFocus: (groupIndex: number, itemIndex: number) => void;
 };
 
-// memo: the virtualizer re-renders the Timeline on every scroll frame, but a row's props don't
-// change while scrolling — so without memo every visible MUI subtree reconciled on every frame,
-// blocking the main thread. With memo a row re-renders only when its offset or data changes.
+// memo so rows re-render only when their data/offset changes, not on every scroll frame.
 export const TimelineRow = memo(function TimelineRow({
     index,
     start,
@@ -46,31 +49,39 @@ export const TimelineRow = memo(function TimelineRow({
     isFirst,
     isLast,
     measureRef,
+    tabbableItemIndex,
+    cursorItemIndex,
+    cursorRef,
+    onItemFocus,
 }: TimelineRowProps) {
     return (
-        // Plain <div>, not MUI <Box>: this positioning wrapper is the hot path. Inline styles skip
-        // Emotion; measureElement reads the real height here via data-index.
         <div
             data-index={index}
             ref={measureRef}
+            role="presentation"
             style={{ ...rowWrapperBaseStyle, transform: `translateY(${start}px)` }}
         >
-            <Box component="section" sx={rowSx}>
-                {/* 1 — date label */}
-                <Typography variant="overline" color="text.secondary" sx={dateSx}>
+            <Box component="section" role="group" aria-label={group.label} sx={rowSx}>
+                <Typography variant="overline" color="text.secondary" sx={dateSx} aria-hidden>
                     {group.label}
                 </Typography>
 
-                {/* 2 — marker + connecting line */}
-                <Box sx={markerColumnSx}>
+                <Box sx={markerColumnSx} aria-hidden>
                     <Box sx={lineSx(isFirst, isLast)} />
                     <Box sx={dotSx} />
                 </Box>
 
-                {/* 3 — the day's events */}
                 <Stack spacing={1} sx={eventsSx}>
-                    {group.events.map((event) => (
-                        <Box key={event.id}>
+                    {group.events.map((event, itemIndex) => (
+                        <Box
+                            key={event.id}
+                            ref={itemIndex === cursorItemIndex ? cursorRef : undefined}
+                            role="listitem"
+                            tabIndex={itemIndex === tabbableItemIndex ? 0 : -1}
+                            aria-label={eventAriaLabel(event)}
+                            onFocus={() => onItemFocus(index, itemIndex)}
+                            sx={eventItemSx}
+                        >
                             <Typography variant="body1" sx={titleSx}>
                                 {event.title}
                             </Typography>

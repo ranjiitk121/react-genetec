@@ -48,6 +48,7 @@ export function DataGrid<TRow>({
 
     // Derived view — each line is a pure call; see shared/utils.ts and state/grid-selectors.ts.
     // Keep typing responsive: the expensive filtering pass reads the deferred filters.
+    //Cache
     const deferredFilters = useDeferredValue(filters);
     const visibleColumns = useMemo(
         () => getVisibleColumns(columns, visibility),
@@ -75,7 +76,7 @@ export function DataGrid<TRow>({
 
     return (
         <TableContainer component={Paper}>
-            <Table aria-label={label}>
+            <Table aria-label={label} sx={{ bgcolor: 'white' }}>
                 <GridHeader
                     columns={visibleColumns}
                     sort={sort}

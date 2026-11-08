@@ -1,7 +1,7 @@
 import type { SxProps, Theme } from '@mui/material/styles';
 
 import type { EventStatus } from '../shared/types';
-import { STATUS_COLOR_MAP } from './timeline-styles';
+import { STATUS_COLOR_MAP } from '../shared/utils';
 
 export const rowSx: SxProps<Theme> = { display: 'flex', gap: 2 };
 
@@ -20,8 +20,6 @@ export const markerColumnSx: SxProps<Theme> = {
     flexShrink: 0,
 };
 
-// The connecting line is trimmed at the ends so it runs marker-to-marker:
-// the first row starts at its marker, the last row stops at its marker.
 export const lineSx = (isFirst: boolean, isLast: boolean): SxProps<Theme> => ({
     position: 'absolute',
     left: '50%',
@@ -46,9 +44,28 @@ export const dotSx: SxProps<Theme> = {
 
 export const eventsSx: SxProps<Theme> = { flex: 1, pb: 3 };
 
+// Native :focus-visible ring (keyboard focus only); scroll-margin gives room when scrolled into view.
+export const eventItemSx: SxProps<Theme> = {
+    px: 1,
+    mx: -1,
+    borderRadius: 1,
+    scrollMarginBlock: 8,
+    outline: 'none',
+    '&:focus-visible': {
+        outline: '2px solid',
+        outlineColor: 'primary.main',
+        outlineOffset: 2,
+    },
+};
+
 export const titleSx: SxProps<Theme> = { fontWeight: 500 };
 
-export const statusSx = (status: EventStatus): SxProps<Theme> => ({
-    color: STATUS_COLOR_MAP[status],
-    textTransform: 'capitalize',
-});
+// .dark shade in light mode, .main in dark mode — MUI's defaults don't clear WCAG AA 4.5:1 on the paper.
+export const statusSx =
+    (status: EventStatus): SxProps<Theme> =>
+    (theme) => ({
+        color: theme.palette[STATUS_COLOR_MAP[status]][
+            theme.palette.mode === 'light' ? 'dark' : 'main'
+        ],
+        textTransform: 'capitalize',
+    });
