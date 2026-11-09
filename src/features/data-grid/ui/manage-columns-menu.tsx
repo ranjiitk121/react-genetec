@@ -33,7 +33,10 @@ export function ManageColumnsMenu<TRow>({
             anchorEl={anchorEl}
             open={open}
             onClose={onClose}
-            //ADD LABEL
+            slotProps={{
+                list: { 'aria-label': 'Toggle column visibility' },
+                paper: { sx: { minWidth: 220 } },
+            }}
         >
             {columns.map((col) => (
                 <MenuItem key={col.id} onClick={() => onToggleColumn(col)}>

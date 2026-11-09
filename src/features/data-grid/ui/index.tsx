@@ -18,6 +18,7 @@ import { GridToolbar } from './grid-toolbar';
 import { GridHeader } from './grid-header';
 import { GridBody } from './grid-body';
 import { GridPagination } from './grid-pagination';
+import { GridNoColumns } from './grid-no-columns';
 import { ColumnActionsMenu } from './column-actions-menu';
 import { FilterPopover } from './filter-popover';
 import { ManageColumnsMenu } from './manage-columns-menu';
@@ -66,7 +67,9 @@ export function DataGrid<TRow>({
     const visibleRows = paginate(sortedRows, page, rowsPerPage);
     const overlay = selectOverlay(state.overlay, columns);
     const hasActiveFilter = hasActiveFilters(filters);
+    const noColumns = visibleColumns.length === 0;
     const closeOverlay = () => dispatch({ type: 'overlayClosed' });
+    const resetColumns = () => dispatch({ type: 'columnVisibilityReset' });
 
     const changeFilter = (value: string) => {
         if (overlay.filterColumnId) {
@@ -82,57 +85,67 @@ export function DataGrid<TRow>({
                     dispatch({ type: 'manageOpened', anchorEl: event.currentTarget })
                 }
             />
-            <Table
-                aria-label={label}
-                sx={{
-                    tableLayout: 'fixed',
-                    '& td': { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-                }}
-            >
-                <GridHeader
-                    columns={visibleColumns}
-                    sort={sort}
-                    filters={filters}
-                    activeActionsColumnId={overlay.activeActionsColumnId}
-                    onSort={(columnId) => dispatch({ type: 'headerClicked', columnId })}
-                    onOpenMenu={(event, columnId) => {
-                        event.stopPropagation();
-                        dispatch({
-                            type: 'actionsMenuOpened',
-                            anchorEl: event.currentTarget,
-                            columnId,
-                        });
-                    }}
-                    onOpenFilter={(event, columnId) =>
-                        dispatch({
-                            type: 'filterOpenedFromHeader',
-                            anchorEl: event.currentTarget,
-                            columnId,
-                        })
-                    }
-                />
-                <GridBody
-                    columns={visibleColumns}
-                    rows={visibleRows}
-                    getRowKey={getRowKey}
-                    hasActiveFilter={hasActiveFilter}
-                />
-            </Table>
-            <GridPagination
-                count={filteredRows.length}
-                page={page}
-                onPageChange={(_event, nextPage) =>
-                    dispatch({ type: 'pageChanged', page: nextPage })
-                }
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={(event) =>
-                    dispatch({
-                        type: 'rowsPerPageChanged',
-                        rowsPerPage: parseInt(event.target.value, 10),
-                    })
-                }
-                rowsPerPageOptions={rowsPerPageOptions}
-            />
+            {noColumns ? (
+                <GridNoColumns onReset={resetColumns} />
+            ) : (
+                <>
+                    <Table
+                        aria-label={label}
+                        sx={{
+                            tableLayout: 'fixed',
+                            '& td': {
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                            },
+                        }}
+                    >
+                        <GridHeader
+                            columns={visibleColumns}
+                            sort={sort}
+                            filters={filters}
+                            activeActionsColumnId={overlay.activeActionsColumnId}
+                            onSort={(columnId) => dispatch({ type: 'headerClicked', columnId })}
+                            onOpenMenu={(event, columnId) => {
+                                event.stopPropagation();
+                                dispatch({
+                                    type: 'actionsMenuOpened',
+                                    anchorEl: event.currentTarget,
+                                    columnId,
+                                });
+                            }}
+                            onOpenFilter={(event, columnId) =>
+                                dispatch({
+                                    type: 'filterOpenedFromHeader',
+                                    anchorEl: event.currentTarget,
+                                    columnId,
+                                })
+                            }
+                        />
+                        <GridBody
+                            columns={visibleColumns}
+                            rows={visibleRows}
+                            getRowKey={getRowKey}
+                            hasActiveFilter={hasActiveFilter}
+                        />
+                    </Table>
+                    <GridPagination
+                        count={filteredRows.length}
+                        page={page}
+                        onPageChange={(_event, nextPage) =>
+                            dispatch({ type: 'pageChanged', page: nextPage })
+                        }
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={(event) =>
+                            dispatch({
+                                type: 'rowsPerPageChanged',
+                                rowsPerPage: parseInt(event.target.value, 10),
+                            })
+                        }
+                        rowsPerPageOptions={rowsPerPageOptions}
+                    />
+                </>
+            )}
             <ColumnActionsMenu
                 anchorEl={overlay.actionsAnchorEl}
                 open={overlay.isActionsOpen}
@@ -150,7 +163,7 @@ export function DataGrid<TRow>({
                 onToggleColumn={(col) =>
                     dispatch({ type: 'columnToggled', columnId: col.id, hidden: col.hidden })
                 }
-                onReset={() => dispatch({ type: 'columnVisibilityReset' })}
+                onReset={resetColumns}
             />
             <FilterPopover
                 open={overlay.isFilterOpen}
