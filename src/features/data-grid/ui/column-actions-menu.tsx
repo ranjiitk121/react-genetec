@@ -6,7 +6,6 @@ import Divider from '@mui/material/Divider';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 
 type ColumnActionsMenuProps = {
     anchorEl: HTMLElement | null;
@@ -15,7 +14,6 @@ type ColumnActionsMenuProps = {
     onSortAsc: () => void;
     onSortDesc: () => void;
     onFilter: () => void;
-    onManageColumns: () => void;
 };
 
 export function ColumnActionsMenu({
@@ -25,7 +23,6 @@ export function ColumnActionsMenu({
     onSortAsc,
     onSortDesc,
     onFilter,
-    onManageColumns,
 }: ColumnActionsMenuProps) {
     return (
         <Menu id="column-actions-menu" anchorEl={anchorEl} open={open} onClose={onClose}>
@@ -47,12 +44,6 @@ export function ColumnActionsMenu({
                     <FilterAltIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>Filter</ListItemText>
-            </MenuItem>
-            <MenuItem onClick={onManageColumns}>
-                <ListItemIcon>
-                    <ViewColumnIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>Manage columns</ListItemText>
             </MenuItem>
         </Menu>
     );

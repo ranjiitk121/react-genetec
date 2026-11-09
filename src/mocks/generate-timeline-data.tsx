@@ -1,11 +1,19 @@
 import type { Column } from '../features/data-grid';
 import type { EventStatus, TimelineEvent } from '../features/timeline';
+import { StatusPill } from '../components/status-pill';
 
 // Columns for showing the same events in the DataGrid (Title / Date / Status).
+// `accessor` stays the raw value (sort/filter operate on it); `cell` renders the design's pill.
 export const eventColumns: Column<TimelineEvent>[] = [
     { id: 'title', label: 'Title', accessor: (event) => event.title, sortable: true },
     { id: 'date', label: 'Date', accessor: (event) => event.date, sortable: true },
-    { id: 'status', label: 'Status', accessor: (event) => event.status, sortable: true },
+    {
+        id: 'status',
+        label: 'Status',
+        accessor: (event) => event.status,
+        cell: (event) => <StatusPill status={event.status} />,
+        sortable: true,
+    },
 ];
 
 export const timelineEvents: TimelineEvent[] = [

@@ -31,18 +31,14 @@ export type GridAction =
     | { type: 'rowsPerPageChanged'; rowsPerPage: number }
     // column visibility
     | { type: 'columnToggled'; columnId: string; hidden?: boolean }
-    | { type: 'allColumnsVisibilitySet'; columnIds: string[]; visible: boolean }
     | { type: 'columnVisibilityReset' }
     // overlays (menus / popovers)
     | { type: 'actionsMenuOpened'; anchorEl: HTMLElement; columnId: string }
     | { type: 'filterOpenedFromHeader'; anchorEl: HTMLElement; columnId: string }
     | { type: 'filterOpenedFromMenu' }
-    | { type: 'manageOpened' }
+    | { type: 'manageOpened'; anchorEl: HTMLElement }
     | { type: 'overlayClosed' };
 
-// `rowsPerPage` has no default here on purpose — the initial page size comes from the
-// caller (the DataGrid `defaultRowsPerPage` / `rowsPerPageOptions` prop), so there is no
-// competing magic number baked into the reducer.
 export function initGridState(rowsPerPage: number, overrides?: Partial<GridState>): GridState {
     return {
         sort: null,
@@ -102,14 +98,6 @@ export function gridReducer(state: GridState, action: GridAction): GridState {
             };
         }
 
-        case 'allColumnsVisibilitySet': {
-            const visibility: VisibilityState = {};
-            action.columnIds.forEach((id) => {
-                visibility[id] = action.visible;
-            });
-            return { ...state, visibility };
-        }
-
         case 'columnVisibilityReset':
             return { ...state, visibility: {} };
 
@@ -137,10 +125,9 @@ export function gridReducer(state: GridState, action: GridAction): GridState {
             };
         }
 
-        case 'manageOpened': {
-            if (state.overlay.kind !== 'actions') return state;
-            return { ...state, overlay: { kind: 'manage', anchorEl: state.overlay.anchorEl } };
-        }
+        case 'manageOpened':
+            // Anchored to the toolbar button, not a column header, so hiding a column can't unmount it.
+            return { ...state, overlay: { kind: 'manage', anchorEl: action.anchorEl } };
 
         case 'overlayClosed':
             return { ...state, overlay: { kind: 'none' } };
