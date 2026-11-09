@@ -140,6 +140,9 @@ Things I knew about and skipped on purpose, for time:
 - **Richer filtering and sorting.** Multi-column, and more than "contains" (equals, ranges), plus
   smarter sort — e.g. sort status by its real order (initiated → started → completed), not
   alphabetically.
+- **Keep view state across reloads.** Filters, sort, page and the active tab reset on refresh. I'd
+  sync them to the URL (a library like `nuqs` makes this clean), so a reload — or a shared link —
+  restores exactly what you were looking at.
 - **Animate new events in.** When you add an event it should ease into the list, not pop in out of
   nowhere.
 - **Handle way more rows.** Personally I'd have loved to optimise the grid (and the rest) to handle
