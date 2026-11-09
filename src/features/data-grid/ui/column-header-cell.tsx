@@ -7,6 +7,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 import type { Column, SortState } from '../shared/types';
+import { tokens } from '../../../theme';
 
 type ColumnHeaderCellProps<TRow> = {
     column: Column<TRow>;
@@ -30,7 +31,18 @@ export function ColumnHeaderCell<TRow>({
     const isActive = sort?.columnId === column.id;
 
     return (
-        <TableCell sortDirection={isActive ? sort!.direction : false}>
+        <TableCell
+            sortDirection={isActive ? sort!.direction : false}
+            sx={
+                isActive
+                    ? {
+                          bgcolor: tokens.primarySoft,
+                          color: 'primary.dark',
+                          boxShadow: (theme) => `inset 0 -2px 0 ${theme.palette.primary.main}`,
+                      }
+                    : undefined
+            }
+        >
             <Box
                 sx={{
                     display: 'flex',

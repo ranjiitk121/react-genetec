@@ -1,7 +1,5 @@
-// Loading placeholder shaped like the real DataGrid: the same table chrome (Paper + header
-// labels) with skeleton body rows, so the layout doesn't jump when data arrives. Rendered as
-// <QueryBoundary>'s loadingFallback — the grid itself stays synchronous and never shows this.
-
+import Box from '@mui/material/Box';
+import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import Table from '@mui/material/Table';
@@ -10,6 +8,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Typography from '@mui/material/Typography';
 
 import type { Column } from '../shared/types';
 
@@ -25,14 +24,30 @@ export function DataGridSkeleton<TRow>({
     rows?: number;
     label?: string;
 }) {
-    // Match the grid's INITIAL render so the layout doesn't shift when data arrives: show the
-    // columns visible by default (`!hidden`). Runtime show/hide toggles don't apply here — they
-    // live in the grid's reducer, which doesn't exist yet while we're still loading.
     const visibleColumns = columns.filter((col) => !col.hidden);
 
     return (
-        <TableContainer component={Paper}>
-            <Table aria-label={label} aria-busy="true">
+        <TableContainer
+            component={Paper}
+            elevation={0}
+            aria-busy="true"
+            sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
+        >
+            <LinearProgress sx={{ height: 3 }} />
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    px: 1.5,
+                    py: 1,
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                }}
+            >
+                <Skeleton variant="rounded" width={96} height={30} />
+            </Box>
+            <Table aria-label={label}>
                 <TableHead>
                     <TableRow>
                         {visibleColumns.map((col) => (
@@ -45,13 +60,38 @@ export function DataGridSkeleton<TRow>({
                         <TableRow key={rowIndex}>
                             {visibleColumns.map((col) => (
                                 <TableCell key={col.id}>
-                                    <Skeleton variant="text" />
+                                    {col.id === 'status' ? (
+                                        <Skeleton
+                                            variant="rounded"
+                                            width={84}
+                                            height={22}
+                                            sx={{ borderRadius: 999 }}
+                                        />
+                                    ) : (
+                                        <Skeleton
+                                            variant="text"
+                                            width={`${60 + ((rowIndex * 7) % 30)}%`}
+                                        />
+                                    )}
                                 </TableCell>
                             ))}
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    px: 2.5,
+                    height: 52,
+                    alignItems: 'center',
+                }}
+            >
+                <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+                    Loading rows…
+                </Typography>
+            </Box>
         </TableContainer>
     );
 }

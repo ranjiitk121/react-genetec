@@ -178,16 +178,6 @@ describe('column visibility', () => {
         expect(next.visibility).toEqual({ age: false, name: false });
     });
 
-    it('allColumnsVisibilitySet sets every given id and replaces the map', () => {
-        const state = makeState({ visibility: { stale: true } });
-        const next = gridReducer(state, {
-            type: 'allColumnsVisibilitySet',
-            columnIds: ['name', 'age'],
-            visible: false,
-        });
-        expect(next.visibility).toEqual({ name: false, age: false });
-    });
-
     it('columnVisibilityReset clears all overrides', () => {
         const state = makeState({ visibility: { name: false, age: true } });
         const next = gridReducer(state, { type: 'columnVisibilityReset' });
@@ -224,14 +214,17 @@ describe('overlay state machine', () => {
         expect(gridReducer(state, { type: 'filterOpenedFromMenu' })).toBe(state);
     });
 
-    it('manageOpened reuses the actions menu anchor', () => {
-        const next = gridReducer(withActionsOverlay('age', A), { type: 'manageOpened' });
-        expect(next.overlay).toEqual({ kind: 'manage', anchorEl: A });
+    it('manageOpened anchors to the toolbar button, from any starting overlay', () => {
+        const next = gridReducer(withActionsOverlay('age', A), {
+            type: 'manageOpened',
+            anchorEl: B,
+        });
+        expect(next.overlay).toEqual({ kind: 'manage', anchorEl: B });
     });
 
-    it('manageOpened is a no-op when the actions menu is not open', () => {
-        const state = makeState({ overlay: { kind: 'filter', anchorEl: A, columnId: 'name' } });
-        expect(gridReducer(state, { type: 'manageOpened' })).toBe(state);
+    it('manageOpened opens straight from the none state', () => {
+        const next = gridReducer(makeState(), { type: 'manageOpened', anchorEl: B });
+        expect(next.overlay).toEqual({ kind: 'manage', anchorEl: B });
     });
 
     it('overlayClosed returns to the none state', () => {

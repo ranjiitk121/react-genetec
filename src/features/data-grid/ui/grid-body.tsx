@@ -24,7 +24,13 @@ export function GridBody<TRow>({ columns, rows, getRowKey, hasActiveFilter }: Gr
                 <GridEmptyRow columnCount={columns.length} filtered={hasActiveFilter} />
             ) : (
                 rows.map((row) => (
-                    <TableRow key={getRowKey(row)}>
+                    <TableRow
+                        key={getRowKey(row)}
+                        sx={{
+                            '&:hover': { bgcolor: 'action.hover' },
+                            '&:last-child td': { border: 0 },
+                        }}
+                    >
                         {columns.map((col) => (
                             <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
                         ))}

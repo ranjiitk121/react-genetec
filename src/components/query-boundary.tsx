@@ -7,19 +7,19 @@
 import type { ReactNode } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import WarningAmberIcon from '@mui/icons-material/WarningAmberRounded';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 export type QueryStatus = 'pending' | 'error' | 'success';
 
 type QueryBoundaryProps = {
     status: QueryStatus;
-    /** Shown while `status === 'pending'`. */
     loadingFallback: ReactNode;
-    /** The success content. */
     children: ReactNode;
-    /** Error surfaced when `status === 'error'`. */
     error?: unknown;
-    /** Called by the error state's Retry button; omit to hide it. */
     onRetry?: () => void;
+    isFetching?: boolean;
 };
 
 export function QueryBoundary({
@@ -28,13 +28,14 @@ export function QueryBoundary({
     children,
     error,
     onRetry,
+    isFetching,
 }: QueryBoundaryProps) {
     if (status === 'pending') {
         return <>{loadingFallback}</>;
     }
 
     if (status === 'error') {
-        const message = error instanceof Error ? error.message : 'Something went wrong.';
+        const message = error instanceof Error ? error.message : 'The data source didn’t respond.';
         return (
             <Box
                 role="alert"
@@ -43,13 +44,42 @@ export function QueryBoundary({
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 1.5,
-                    py: 6,
-                    color: 'error.main',
+                    py: 7,
+                    px: 3,
+                    textAlign: 'center',
                 }}
             >
-                <span>{message}</span>
+                <Box
+                    aria-hidden="true"
+                    sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: '50%',
+                        bgcolor: 'error.light',
+                        color: 'error.main',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <WarningAmberIcon />
+                </Box>
+                <Box>
+                    <Typography variant="subtitle1">Couldn’t load events</Typography>
+                    <Typography
+                        variant="body2"
+                        sx={{ color: 'text.secondary', mt: 0.5, maxWidth: 360 }}
+                    >
+                        {message}
+                    </Typography>
+                </Box>
                 {onRetry && (
-                    <Button variant="outlined" color="error" onClick={onRetry}>
+                    <Button
+                        variant="contained"
+                        startIcon={<RefreshIcon />}
+                        loading={isFetching}
+                        onClick={onRetry}
+                    >
                         Retry
                     </Button>
                 )}

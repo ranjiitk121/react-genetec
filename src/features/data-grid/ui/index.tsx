@@ -13,6 +13,7 @@ import {
 } from '../shared/utils';
 import { gridReducer, initGridState } from '../state/grid-reducer';
 import { selectOverlay } from '../state/grid-selectors';
+import { GridToolbar } from './grid-toolbar';
 import { GridHeader } from './grid-header';
 import { GridBody } from './grid-body';
 import { GridPagination } from './grid-pagination';
@@ -27,9 +28,7 @@ type FilterableTableProps<TRow> = {
     rows: TRow[];
     getRowKey: (row: TRow) => string | number;
     label?: string;
-    /** Page-size choices in the "Rows per page" dropdown. */
     rowsPerPageOptions?: number[];
-    /** Initial page size — must be one of `rowsPerPageOptions`. Defaults to the first option. */
     defaultRowsPerPage?: number;
 };
 
@@ -75,8 +74,18 @@ export function DataGrid<TRow>({
     };
 
     return (
-        <TableContainer component={Paper}>
-            <Table aria-label={label} sx={{ bgcolor: 'white' }}>
+        <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
+        >
+            <GridToolbar
+                isManageOpen={overlay.isManageOpen}
+                onManageColumns={(event) =>
+                    dispatch({ type: 'manageOpened', anchorEl: event.currentTarget })
+                }
+            />
+            <Table aria-label={label}>
                 <GridHeader
                     columns={visibleColumns}
                     sort={sort}
@@ -128,7 +137,6 @@ export function DataGrid<TRow>({
                 onSortAsc={() => dispatch({ type: 'sortSelected', direction: 'asc' })}
                 onSortDesc={() => dispatch({ type: 'sortSelected', direction: 'desc' })}
                 onFilter={() => dispatch({ type: 'filterOpenedFromMenu' })}
-                onManageColumns={() => dispatch({ type: 'manageOpened' })}
             />
             <ManageColumnsMenu
                 anchorEl={overlay.manageAnchorEl}
@@ -138,13 +146,6 @@ export function DataGrid<TRow>({
                 visibility={visibility}
                 onToggleColumn={(col) =>
                     dispatch({ type: 'columnToggled', columnId: col.id, hidden: col.hidden })
-                }
-                onSetAllVisibility={(visible) =>
-                    dispatch({
-                        type: 'allColumnsVisibilitySet',
-                        columnIds: columns.map((c) => c.id),
-                        visible,
-                    })
                 }
                 onReset={() => dispatch({ type: 'columnVisibilityReset' })}
             />

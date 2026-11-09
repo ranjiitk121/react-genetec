@@ -16,7 +16,6 @@ type ManageColumnsMenuProps<TRow> = {
     columns: Column<TRow>[];
     visibility: VisibilityState;
     onToggleColumn: (col: Column<TRow>) => void;
-    onSetAllVisibility: (visible: boolean) => void;
     onReset: () => void;
 };
 
@@ -27,12 +26,8 @@ export function ManageColumnsMenu<TRow>({
     columns,
     visibility,
     onToggleColumn,
-    onSetAllVisibility,
     onReset,
 }: ManageColumnsMenuProps<TRow>) {
-    const allVisible = columns.every((col) => isColumnVisible(col, visibility));
-    const someVisible = columns.some((col) => isColumnVisible(col, visibility));
-
     return (
         <Menu
             anchorEl={anchorEl}
@@ -52,25 +47,7 @@ export function ManageColumnsMenu<TRow>({
                 </MenuItem>
             ))}
             <Divider />
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    pr: 1,
-                }}
-            >
-                {/* TODO: fix issue with inner menu jumping */}
-                <MenuItem sx={{ flex: 1 }} onClick={() => onSetAllVisibility(!allVisible)}>
-                    <Checkbox
-                        edge="start"
-                        checked={allVisible}
-                        indeterminate={someVisible && !allVisible}
-                        size="small"
-                        disableRipple
-                    />
-                    <ListItemText>Show/Hide All</ListItemText>
-                </MenuItem>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', pr: 1 }}>
                 <Button size="small" onClick={onReset}>
                     RESET
                 </Button>

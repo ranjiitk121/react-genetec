@@ -3,12 +3,15 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, type KeyboardEvent
 import { useVirtualizer } from '@tanstack/react-virtual';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
 
 import type { Direction, TimelineEvent } from '../shared/types';
 import { groupEventsByDay, nextFocusPosition } from '../shared/utils';
 import { initTimelineState, timelineReducer } from '../state/timeline-reducer';
-import { paperSx } from './index.styles';
+import { cardHeaderSx, cardSx, paperSx } from './index.styles';
 import { TimelineRow } from './timeline-row';
+
+export { TimelineSkeleton } from './timeline-skeleton';
 
 // Exact per-row height: PADDING + events × PER_EVENT + (events − 1) × GAP.
 const PADDING = 24;
@@ -87,37 +90,46 @@ export function Timeline({ events }: TimelineProps) {
         : { groupIndex: virtualItems[0]?.index ?? focus.groupIndex, itemIndex: 0 };
 
     return (
-        <Paper
-            ref={scrollRef}
-            sx={paperSx}
-            role="list"
-            aria-label={`Event timeline, ${groups.length} days`}
-            onKeyDown={handleKeyDown}
-        >
-            <Box
-                role="presentation"
-                sx={{ position: 'relative', height: virtualizer.getTotalSize() }}
-            >
-                {virtualItems.map((virtualRow) => (
-                    <TimelineRow
-                        key={groups[virtualRow.index].dayKey}
-                        index={virtualRow.index}
-                        start={virtualRow.start}
-                        group={groups[virtualRow.index]}
-                        isFirst={virtualRow.index === 0}
-                        isLast={virtualRow.index === groups.length - 1}
-                        measureRef={virtualizer.measureElement}
-                        tabbableItemIndex={
-                            tabStop.groupIndex === virtualRow.index ? tabStop.itemIndex : -1
-                        }
-                        cursorItemIndex={
-                            focus.groupIndex === virtualRow.index ? focus.itemIndex : -1
-                        }
-                        cursorRef={focusCursorItem}
-                        onItemFocus={handleItemFocus}
-                    />
-                ))}
+        <Box sx={cardSx}>
+            <Box sx={cardHeaderSx}>
+                <Typography variant="subtitle1">Timeline</Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {groups.length.toLocaleString()} days · {events.length.toLocaleString()} events
+                </Typography>
             </Box>
-        </Paper>
+            <Paper
+                ref={scrollRef}
+                elevation={0}
+                sx={paperSx}
+                role="list"
+                aria-label={`Event timeline, ${groups.length} days`}
+                onKeyDown={handleKeyDown}
+            >
+                <Box
+                    role="presentation"
+                    sx={{ position: 'relative', height: virtualizer.getTotalSize() }}
+                >
+                    {virtualItems.map((virtualRow) => (
+                        <TimelineRow
+                            key={groups[virtualRow.index].dayKey}
+                            index={virtualRow.index}
+                            start={virtualRow.start}
+                            group={groups[virtualRow.index]}
+                            isFirst={virtualRow.index === 0}
+                            isLast={virtualRow.index === groups.length - 1}
+                            measureRef={virtualizer.measureElement}
+                            tabbableItemIndex={
+                                tabStop.groupIndex === virtualRow.index ? tabStop.itemIndex : -1
+                            }
+                            cursorItemIndex={
+                                focus.groupIndex === virtualRow.index ? focus.itemIndex : -1
+                            }
+                            cursorRef={focusCursorItem}
+                            onItemFocus={handleItemFocus}
+                        />
+                    ))}
+                </Box>
+            </Paper>
+        </Box>
     );
 }

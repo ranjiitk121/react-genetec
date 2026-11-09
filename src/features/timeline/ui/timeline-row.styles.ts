@@ -1,8 +1,5 @@
 import type { SxProps, Theme } from '@mui/material/styles';
 
-import type { EventStatus } from '../shared/types';
-import { STATUS_COLOR_MAP } from '../shared/utils';
-
 export const rowSx: SxProps<Theme> = { display: 'flex', gap: 2 };
 
 export const dateSx: SxProps<Theme> = {
@@ -46,11 +43,17 @@ export const eventsSx: SxProps<Theme> = { flex: 1, pb: 3 };
 
 // Native :focus-visible ring (keyboard focus only); scroll-margin gives room when scrolled into view.
 export const eventItemSx: SxProps<Theme> = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 1.5,
     px: 1,
     mx: -1,
+    minHeight: 44,
     borderRadius: 1,
     scrollMarginBlock: 8,
     outline: 'none',
+    '&:hover': { bgcolor: 'action.hover' },
     '&:focus-visible': {
         outline: '2px solid',
         outlineColor: 'primary.main',
@@ -58,14 +61,11 @@ export const eventItemSx: SxProps<Theme> = {
     },
 };
 
-export const titleSx: SxProps<Theme> = { fontWeight: 500 };
-
-// .dark shade in light mode, .main in dark mode — MUI's defaults don't clear WCAG AA 4.5:1 on the paper.
-export const statusSx =
-    (status: EventStatus): SxProps<Theme> =>
-    (theme) => ({
-        color: theme.palette[STATUS_COLOR_MAP[status]][
-            theme.palette.mode === 'light' ? 'dark' : 'main'
-        ],
-        textTransform: 'capitalize',
-    });
+export const titleSx: SxProps<Theme> = {
+    fontWeight: 500,
+    flex: 1,
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+};

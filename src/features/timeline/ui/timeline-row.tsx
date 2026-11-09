@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
+import { StatusPill } from '../../../components/status-pill';
 import type { TimelineGroup } from '../shared/types';
 import { eventAriaLabel } from '../shared/utils';
 import {
@@ -14,11 +15,9 @@ import {
     lineSx,
     markerColumnSx,
     rowSx,
-    statusSx,
     titleSx,
 } from './timeline-row.styles';
 
-// Hoisted so it isn't recreated per row; the per-row transform is added at render time.
 const rowWrapperBaseStyle: CSSProperties = {
     position: 'absolute',
     top: 0,
@@ -85,9 +84,7 @@ export const TimelineRow = memo(function TimelineRow({
                             <Typography variant="body1" sx={titleSx}>
                                 {event.title}
                             </Typography>
-                            <Typography variant="caption" sx={statusSx(event.status)}>
-                                {event.status}
-                            </Typography>
+                            <StatusPill status={event.status} />
                         </Box>
                     ))}
                 </Stack>

@@ -1,4 +1,4 @@
-export { Timeline } from './ui';
+export { Timeline, TimelineSkeleton } from './ui';
 
 export type {
     EventStatus,
