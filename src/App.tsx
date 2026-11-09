@@ -4,6 +4,7 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Snackbar from '@mui/material/Snackbar';
 
+import { AppErrorBoundary } from './components/app-error-boundary';
 import { EventsHeader, type View } from './components/events-header';
 import { QueryBoundary } from './components/query-boundary';
 import { DataGrid, DataGridSkeleton } from './features/data-grid';
@@ -25,7 +26,7 @@ function App() {
 
     const { data, status, error, refetch, isFetching } = useQuery({
         queryKey: ['events'],
-        queryFn: () => fetchEvents({ count: 200_000, fail: failRef.current }),
+        queryFn: () => fetchEvents({ count: 100_000, fail: failRef.current }),
     });
     const events = data ?? [];
 
@@ -78,7 +79,9 @@ function App() {
                         onRetry={reload}
                         loadingFallback={<TimelineSkeleton />}
                     >
-                        <Timeline events={events} />
+                        <AppErrorBoundary title="The timeline couldn’t render" resetKeys={[events]}>
+                            <Timeline events={events} />
+                        </AppErrorBoundary>
                     </QueryBoundary>
                 )}
 
@@ -90,14 +93,16 @@ function App() {
                         onRetry={reload}
                         loadingFallback={<DataGridSkeleton columns={eventColumns} label="Events" />}
                     >
-                        <DataGrid<TimelineEvent>
-                            columns={eventColumns}
-                            rows={events}
-                            getRowKey={(event) => event.id}
-                            label="Events"
-                            rowsPerPageOptions={[10, 25, 50, 100]}
-                            defaultRowsPerPage={10}
-                        />
+                        <AppErrorBoundary title="The grid couldn’t render" resetKeys={[events]}>
+                            <DataGrid<TimelineEvent>
+                                columns={eventColumns}
+                                rows={events}
+                                getRowKey={(event) => event.id}
+                                label="Events"
+                                rowsPerPageOptions={[10, 25, 50]}
+                                defaultRowsPerPage={10}
+                            />
+                        </AppErrorBoundary>
                     </QueryBoundary>
                 )}
             </Box>

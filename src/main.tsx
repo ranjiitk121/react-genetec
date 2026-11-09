@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import './index.css';
 import App from './App.tsx';
+import { AppErrorBoundary } from './components/app-error-boundary';
 import { appTheme } from './theme';
 
 // One client for the app. `retry: false` keeps the demo's "Force error" state deterministic
@@ -19,7 +20,9 @@ createRoot(document.getElementById('root')!).render(
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={appTheme}>
                 <CssBaseline />
-                <App />
+                <AppErrorBoundary>
+                    <App />
+                </AppErrorBoundary>
             </ThemeProvider>
         </QueryClientProvider>
     </StrictMode>,
