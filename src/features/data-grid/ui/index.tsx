@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useReducer } from 'react';
+import { useMemo, useReducer } from 'react';
 import Table from '@mui/material/Table';
 import TableContainer from '@mui/material/TableContainer';
 import Paper from '@mui/material/Paper';
@@ -21,8 +21,11 @@ import { GridPagination } from './grid-pagination';
 import { ColumnActionsMenu } from './column-actions-menu';
 import { FilterPopover } from './filter-popover';
 import { ManageColumnsMenu } from './manage-columns-menu';
+import { useDebouncedValue } from './use-debounced-value';
 
 export { DataGridSkeleton } from './data-grid-skeleton';
+
+const FILTER_DEBOUNCE_MS = 200;
 
 type FilterableTableProps<TRow> = {
     columns: Column<TRow>[];
@@ -45,14 +48,14 @@ export function DataGrid<TRow>({
         initGridState(defaultRowsPerPage ?? rowsPerPageOptions[0]),
     );
     const { sort, filters, visibility, page, rowsPerPage } = state;
-    const deferredFilters = useDeferredValue(filters);
+    const debouncedFilters = useDebouncedValue(filters, FILTER_DEBOUNCE_MS);
     const visibleColumns = useMemo(
         () => getVisibleColumns(columns, visibility),
         [columns, visibility],
     );
     const filteredRows = useMemo(
-        () => getFilteredRows(rows, columns, deferredFilters),
-        [rows, columns, deferredFilters],
+        () => getFilteredRows(rows, columns, debouncedFilters),
+        [rows, columns, debouncedFilters],
     );
     const sortedRows = useMemo(
         () => getSortedRows(filteredRows, columns, sort),
