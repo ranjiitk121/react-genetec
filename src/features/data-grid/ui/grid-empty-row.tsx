@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography';
 import CalendarTodayIcon from '@mui/icons-material/CalendarTodayOutlined';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 
+import { emptyIconSx, emptyStateSx } from './grid-empty-row.styles';
+
 export function GridEmptyRow({
     columnCount,
     filtered,
@@ -21,31 +23,8 @@ export function GridEmptyRow({
     return (
         <TableRow>
             <TableCell colSpan={columnCount} sx={{ height: 'auto', border: 0 }}>
-                <Box
-                    role={filtered ? 'status' : undefined}
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 1.5,
-                        py: 7,
-                        px: 3,
-                        textAlign: 'center',
-                    }}
-                >
-                    <Box
-                        aria-hidden="true"
-                        sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: '50%',
-                            bgcolor: 'action.hover',
-                            color: 'text.secondary',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
+                <Box role={filtered ? 'status' : undefined} sx={emptyStateSx}>
+                    <Box aria-hidden="true" sx={emptyIconSx}>
                         <Icon fontSize="small" />
                     </Box>
                     <Box>

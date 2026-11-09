@@ -11,6 +11,8 @@ import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 
 import type { Column } from '../shared/types';
+import { footerSx } from './data-grid-skeleton.styles';
+import { containerSx, toolbarBarSx } from './index.styles';
 
 const SKELETON_ROWS = 8;
 
@@ -27,24 +29,9 @@ export function DataGridSkeleton<TRow>({
     const visibleColumns = columns.filter((col) => !col.hidden);
 
     return (
-        <TableContainer
-            component={Paper}
-            elevation={0}
-            aria-busy="true"
-            sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
-        >
+        <TableContainer component={Paper} elevation={0} aria-busy="true" sx={containerSx}>
             <LinearProgress sx={{ height: 3 }} />
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center',
-                    px: 1.5,
-                    py: 1,
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                }}
-            >
+            <Box sx={toolbarBarSx}>
                 <Skeleton variant="rounded" width={96} height={30} />
             </Box>
             <Table aria-label={label}>
@@ -79,15 +66,7 @@ export function DataGridSkeleton<TRow>({
                     ))}
                 </TableBody>
             </Table>
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    px: 2.5,
-                    height: 52,
-                    alignItems: 'center',
-                }}
-            >
+            <Box sx={footerSx}>
                 <Typography variant="body2" sx={{ color: 'text.disabled' }}>
                     Loading rows…
                 </Typography>

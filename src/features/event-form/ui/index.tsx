@@ -24,7 +24,6 @@ type EventFormProps = {
 
 export function EventForm({ open, onSave, onClose, initialValues }: EventFormProps) {
     const isEdit = initialValues !== undefined;
-
     const [draft, setDraft] = useState<EventFormValues>(initialValues ?? emptyDraft);
     const [errors, setErrors] = useState<FormErrors>({});
 

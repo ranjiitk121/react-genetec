@@ -1,5 +1,7 @@
 import Box from '@mui/material/Box';
 
+import { dotSx, pillSx } from './status-pill.styles';
+
 export type PillStatus = 'initiated' | 'started' | 'completed';
 
 const STATUS_STYLE: Record<PillStatus, { label: string; dot: string; bg: string; fg: string }> = {
@@ -11,27 +13,8 @@ const STATUS_STYLE: Record<PillStatus, { label: string; dot: string; bg: string;
 export function StatusPill({ status }: { status: PillStatus }) {
     const s = STATUS_STYLE[status];
     return (
-        <Box
-            component="span"
-            sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.75,
-                height: 24,
-                px: 1.25,
-                borderRadius: 999,
-                fontSize: 12,
-                fontWeight: 600,
-                lineHeight: 1,
-                bgcolor: s.bg,
-                color: s.fg,
-            }}
-        >
-            <Box
-                component="span"
-                aria-hidden="true"
-                sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: s.dot }}
-            />
+        <Box component="span" sx={pillSx(s.bg, s.fg)}>
+            <Box component="span" aria-hidden="true" sx={dotSx(s.dot)} />
             {s.label}
         </Box>
     );

@@ -4,6 +4,7 @@ import TableRow from '@mui/material/TableRow';
 
 import type { Column } from '../shared/types';
 import { GridEmptyRow } from './grid-empty-row';
+import { rowSx } from './grid-body.styles';
 
 function getCellValue<TRow>(column: Column<TRow>, row: TRow) {
     return column.cell ? column.cell(row) : column.accessor(row);
@@ -24,13 +25,7 @@ export function GridBody<TRow>({ columns, rows, getRowKey, hasActiveFilter }: Gr
                 <GridEmptyRow columnCount={columns.length} filtered={hasActiveFilter} />
             ) : (
                 rows.map((row) => (
-                    <TableRow
-                        key={getRowKey(row)}
-                        sx={{
-                            '&:hover': { bgcolor: 'action.hover' },
-                            '&:last-child td': { border: 0 },
-                        }}
-                    >
+                    <TableRow key={getRowKey(row)} sx={rowSx}>
                         {columns.map((col) => (
                             <TableCell key={col.id}>{getCellValue(col, row)}</TableCell>
                         ))}

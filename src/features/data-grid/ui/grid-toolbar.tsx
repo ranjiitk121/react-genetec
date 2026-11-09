@@ -3,6 +3,8 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ViewColumnIcon from '@mui/icons-material/ViewColumn';
 
+import { toolbarBarSx } from './index.styles';
+
 type GridToolbarProps = {
     isManageOpen: boolean;
     onManageColumns: (event: MouseEvent<HTMLElement>) => void;
@@ -10,17 +12,7 @@ type GridToolbarProps = {
 
 export function GridToolbar({ isManageOpen, onManageColumns }: GridToolbarProps) {
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                px: 1.5,
-                py: 1,
-                borderBottom: 1,
-                borderColor: 'divider',
-            }}
-        >
+        <Box sx={toolbarBarSx}>
             <Button
                 size="small"
                 color="inherit"

@@ -11,5 +11,5 @@
         "react/react-in-jsx-scope": "off",
         "import/no-unassigned-import": "off"
     },
-    "ignorePatterns": ["dist", "node_modules"]
+    "ignorePatterns": ["dist", "node_modules", "*-html", "frontend-masters-state-workshop"]
 }

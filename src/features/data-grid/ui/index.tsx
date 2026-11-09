@@ -13,6 +13,7 @@ import {
 } from '../shared/utils';
 import { gridReducer, initGridState } from '../state/grid-reducer';
 import { selectOverlay } from '../state/grid-selectors';
+import { containerSx } from './index.styles';
 import { GridToolbar } from './grid-toolbar';
 import { GridHeader } from './grid-header';
 import { GridBody } from './grid-body';
@@ -44,10 +45,6 @@ export function DataGrid<TRow>({
         initGridState(defaultRowsPerPage ?? rowsPerPageOptions[0]),
     );
     const { sort, filters, visibility, page, rowsPerPage } = state;
-
-    // Derived view — each line is a pure call; see shared/utils.ts and state/grid-selectors.ts.
-    // Keep typing responsive: the expensive filtering pass reads the deferred filters.
-    //Cache
     const deferredFilters = useDeferredValue(filters);
     const visibleColumns = useMemo(
         () => getVisibleColumns(columns, visibility),
@@ -64,8 +61,6 @@ export function DataGrid<TRow>({
     const visibleRows = paginate(sortedRows, page, rowsPerPage);
     const overlay = selectOverlay(state.overlay, columns);
     const hasActiveFilter = hasActiveFilters(filters);
-
-    // Event handlers — thin wrappers over `dispatch`. Business rules live in the reducer.
     const closeOverlay = () => dispatch({ type: 'overlayClosed' });
     const changeFilter = (value: string) => {
         if (overlay.filterColumnId) {
@@ -74,11 +69,7 @@ export function DataGrid<TRow>({
     };
 
     return (
-        <TableContainer
-            component={Paper}
-            elevation={0}
-            sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
-        >
+        <TableContainer component={Paper} elevation={0} sx={containerSx}>
             <GridToolbar
                 isManageOpen={overlay.isManageOpen}
                 onManageColumns={(event) =>

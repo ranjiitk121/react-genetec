@@ -36,7 +36,6 @@ function App() {
     });
     const events = data ?? [];
 
-    // Success region auto-hides (matches the form-flow spec); clears on a new message or unmount.
     useEffect(() => {
         if (!savedMessage) return;
         const timer = setTimeout(() => setSavedMessage(''), SUCCESS_TIMEOUT_MS);
@@ -148,7 +147,6 @@ function App() {
                     </QueryBoundary>
                 )}
             </Box>
-
             <EventForm
                 key={formOpen ? 'open' : 'closed'}
                 open={formOpen}

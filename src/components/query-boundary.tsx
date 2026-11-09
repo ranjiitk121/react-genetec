@@ -11,6 +11,8 @@ import Typography from '@mui/material/Typography';
 import WarningAmberIcon from '@mui/icons-material/WarningAmberRounded';
 import RefreshIcon from '@mui/icons-material/Refresh';
 
+import { errorBoxSx, errorIconSx, errorMessageSx } from './query-boundary.styles';
+
 export type QueryStatus = 'pending' | 'error' | 'success';
 
 type QueryBoundaryProps = {
@@ -37,39 +39,13 @@ export function QueryBoundary({
     if (status === 'error') {
         const message = error instanceof Error ? error.message : 'The data source didn’t respond.';
         return (
-            <Box
-                role="alert"
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    py: 7,
-                    px: 3,
-                    textAlign: 'center',
-                }}
-            >
-                <Box
-                    aria-hidden="true"
-                    sx={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: '50%',
-                        bgcolor: 'error.light',
-                        color: 'error.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                >
+            <Box role="alert" sx={errorBoxSx}>
+                <Box aria-hidden="true" sx={errorIconSx}>
                     <WarningAmberIcon />
                 </Box>
                 <Box>
                     <Typography variant="subtitle1">Couldn’t load events</Typography>
-                    <Typography
-                        variant="body2"
-                        sx={{ color: 'text.secondary', mt: 0.5, maxWidth: 360 }}
-                    >
+                    <Typography variant="body2" sx={errorMessageSx}>
                         {message}
                     </Typography>
                 </Box>

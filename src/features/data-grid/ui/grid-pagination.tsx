@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
 import TablePagination from '@mui/material/TablePagination';
 
+import { rowCountBarSx } from './grid-pagination.styles';
+
 type GridPaginationProps = {
     count: number;
     page: number;
@@ -29,20 +31,7 @@ export function GridPagination({
                 onRowsPerPageChange={onRowsPerPageChange}
                 rowsPerPageOptions={rowsPerPageOptions}
             />
-            <Box
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    px: 2,
-                    py: 1,
-                    borderTop: 1,
-                    borderColor: 'divider',
-                    color: 'text.secondary',
-                    fontSize: 14,
-                }}
-            >
-                {count.toLocaleString()} rows
-            </Box>
+            <Box sx={rowCountBarSx}>{count.toLocaleString()} rows</Box>
         </>
     );
 }
