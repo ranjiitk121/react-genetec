@@ -3,7 +3,11 @@ import { defineConfig } from 'vitest/config';
 
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react({
+            compiler: true,
+        }),
+    ],
     test: {
         include: ['src/**/*.{test,spec}.{ts,tsx}'],
     },
