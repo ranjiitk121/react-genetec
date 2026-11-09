@@ -97,7 +97,9 @@ export function Timeline({ events, groups, isPending }: TimelineProps) {
     return (
         <Box sx={{ ...cardSx, ...(isPending && { opacity: 0.6, transition: 'opacity 150ms' }) }}>
             <Box sx={cardHeaderSx}>
-                <Typography variant="subtitle1">Timeline</Typography>
+                <Typography variant="subtitle1" component="h5">
+                    Timeline
+                </Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                     {groups.length.toLocaleString()} days · {events.length.toLocaleString()} events
                 </Typography>

@@ -1,4 +1,4 @@
-// The DataGrid's view-state as an event-driven reducer. Design rationale in NOTES.md.
+// The DataGrid's view-state as an event-driven reducer.
 
 import { resolveVisibility } from '../shared/utils';
 import type { FilterState, SortDirection, SortState, VisibilityState } from '../shared/types';

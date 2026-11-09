@@ -57,7 +57,7 @@ export const TimelineRow = memo(function TimelineRow({
             role="presentation"
             style={{ ...rowWrapperBaseStyle, transform: `translateY(${start}px)` }}
         >
-            <Box component="section" role="group" aria-label={group.label} sx={rowSx}>
+            <Box component="section" role="listitem" aria-label={group.label} sx={rowSx}>
                 <Typography variant="overline" color="text.secondary" sx={dateSx} aria-hidden>
                     {group.label}
                 </Typography>
@@ -67,7 +67,7 @@ export const TimelineRow = memo(function TimelineRow({
                     <Box sx={dotSx} />
                 </Box>
 
-                <Stack spacing={1} sx={eventsSx}>
+                <Stack spacing={1} role="list" aria-label={`${group.label} events`} sx={eventsSx}>
                     {group.events.map((event, itemIndex) => (
                         <Box
                             key={event.id}

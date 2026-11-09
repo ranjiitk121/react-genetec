@@ -18,7 +18,7 @@ export function getSortedRows<TRow>(
     // Decorate-sort-undecorate: compute each row's sort key ONCE (O(n) accessor calls)
     // instead of 2× per comparison (O(n·log n)). The comparator then only compares
     // precomputed primitives.
-    // NOTE: single-column only. Multi-column sort is unsupported by design — see NOTES.md.
+    // NOTE: single-column only. Multi-column sort is unsupported by design.
     const dir = sort.direction === 'asc' ? 1 : -1;
     const decorated = rows.map((row) => ({ row, key: columnToSortBy.accessor(row) }));
     decorated.sort((a, b) => {
@@ -29,8 +29,6 @@ export function getSortedRows<TRow>(
     return decorated.map((d) => d.row);
 }
 
-// Declared as named functions (not arrow consts) so they show up by name in the
-// Performance profiler's bottom-up / call tree instead of as "(anonymous)".
 export function resolveVisibility(
     visibility: ColumnVisibility,
     columnId: string,
