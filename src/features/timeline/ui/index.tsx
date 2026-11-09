@@ -10,6 +10,8 @@ import { initTimelineState, timelineReducer } from '../state/timeline-reducer';
 import { paperSx } from './index.styles';
 import { TimelineRow } from './timeline-row';
 
+export { TimelineSkeleton } from './timeline-skeleton';
+
 // Exact per-row height: PADDING + events × PER_EVENT + (events − 1) × GAP.
 const PADDING = 24;
 const PER_EVENT = 54;
