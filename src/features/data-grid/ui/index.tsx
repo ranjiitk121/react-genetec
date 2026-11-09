@@ -57,6 +57,7 @@ export function DataGrid<TRow>({
         () => getFilteredRows(rows, columns, debouncedFilters),
         [rows, columns, debouncedFilters],
     );
+
     const sortedRows = useMemo(
         () => getSortedRows(filteredRows, columns, sort),
         [filteredRows, columns, sort],
@@ -79,7 +80,15 @@ export function DataGrid<TRow>({
                     dispatch({ type: 'manageOpened', anchorEl: event.currentTarget })
                 }
             />
-            <Table aria-label={label}>
+            <Table
+                aria-label={label}
+                sx={{
+                    // Fixed layout so column widths don't resize to each sorted page's content
+                    // (which caused columns to shift on sort). Widths stay constant; cells clip.
+                    tableLayout: 'fixed',
+                    '& td': { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+                }}
+            >
                 <GridHeader
                     columns={visibleColumns}
                     sort={sort}

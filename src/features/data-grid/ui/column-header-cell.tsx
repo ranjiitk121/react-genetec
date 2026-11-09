@@ -5,9 +5,10 @@ import Tooltip from '@mui/material/Tooltip';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 import type { Column, SortState } from '../shared/types';
-import { activeCellSx, headerCellInnerSx } from './column-header-cell.styles';
+import { activeCellSx, headerCellInnerSx, sortLabelSx } from './column-header-cell.styles';
 
 type ColumnHeaderCellProps<TRow> = {
     column: Column<TRow>;
@@ -29,23 +30,29 @@ export function ColumnHeaderCell<TRow>({
     onOpenFilter,
 }: ColumnHeaderCellProps<TRow>) {
     const isActive = sort?.columnId === column.id;
+    const sortable = column.sortable !== false;
 
     return (
         <TableCell
             sortDirection={isActive ? sort!.direction : false}
-            sx={isActive ? activeCellSx : undefined}
+            onClick={sortable ? () => onSort(column.id) : undefined}
+            sx={[isActive && activeCellSx, sortable && { cursor: 'pointer' }] as SxProps<Theme>}
         >
             <Box sx={headerCellInnerSx}>
-                {column.sortable === false ? (
-                    column.label
-                ) : (
+                {sortable ? (
                     <TableSortLabel
                         active={isActive}
                         direction={isActive ? sort!.direction : 'asc'}
-                        onClick={() => onSort(column.id)}
+                        sx={sortLabelSx}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSort(column.id);
+                        }}
                     >
                         {column.label}
                     </TableSortLabel>
+                ) : (
+                    column.label
                 )}
                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     {hasFilter && (
@@ -53,7 +60,10 @@ export function ColumnHeaderCell<TRow>({
                             <IconButton
                                 size="small"
                                 color="primary"
-                                onClick={(e) => onOpenFilter(e, column.id)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onOpenFilter(e, column.id);
+                                }}
                                 aria-label={`Edit filter for ${column.label} (active)`}
                             >
                                 <FilterAltIcon fontSize="small" />
@@ -62,7 +72,10 @@ export function ColumnHeaderCell<TRow>({
                     )}
                     <IconButton
                         size="small"
-                        onClick={(e) => onOpenMenu(e, column.id)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenMenu(e, column.id);
+                        }}
                         aria-label={`Column options for ${column.label}`}
                         aria-haspopup="true"
                         aria-expanded={isMenuOpen}

@@ -55,13 +55,14 @@ export function gridReducer(state: GridState, action: GridAction): GridState {
     switch (action.type) {
         case 'headerClicked': {
             const { sort } = state;
-            const direction: SortDirection =
-                !sort || sort.columnId !== action.columnId
-                    ? 'asc'
-                    : sort.direction === 'asc'
-                      ? 'desc'
-                      : 'asc';
-            return { ...state, sort: { columnId: action.columnId, direction } };
+
+            if (!sort || sort.columnId !== action.columnId) {
+                return { ...state, sort: { columnId: action.columnId, direction: 'asc' } };
+            }
+            if (sort.direction === 'asc') {
+                return { ...state, sort: { columnId: action.columnId, direction: 'desc' } };
+            }
+            return { ...state, sort: null };
         }
 
         case 'sortSelected': {

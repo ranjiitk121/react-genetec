@@ -13,3 +13,9 @@ export const headerCellInnerSx: SxProps<Theme> = {
     alignItems: 'center',
     justifyContent: 'space-between',
 };
+
+export const sortLabelSx: SxProps<Theme> = {
+    '& .MuiTableSortLabel-icon': { opacity: 0 },
+    '&:hover .MuiTableSortLabel-icon': { opacity: 0 },
+    '&.Mui-active .MuiTableSortLabel-icon': { opacity: 1 },
+};

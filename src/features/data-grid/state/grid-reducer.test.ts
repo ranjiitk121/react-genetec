@@ -58,10 +58,10 @@ describe('sorting — headerClicked', () => {
         expect(next.sort).toEqual({ columnId: 'name', direction: 'desc' });
     });
 
-    it('toggles desc → asc on the same column', () => {
+    it('clears the sort on the third click (desc → unsorted)', () => {
         const state = makeState({ sort: { columnId: 'name', direction: 'desc' } });
         const next = gridReducer(state, { type: 'headerClicked', columnId: 'name' });
-        expect(next.sort).toEqual({ columnId: 'name', direction: 'asc' });
+        expect(next.sort).toBeNull();
     });
 
     it('resets to ascending when switching to a different column', () => {
