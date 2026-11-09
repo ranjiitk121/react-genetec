@@ -33,7 +33,6 @@ type TimelineRowProps = {
     group: TimelineGroup;
     isFirst: boolean;
     isLast: boolean;
-    measureRef: (el: Element | null) => void;
     tabbableItemIndex: number; // item with roving tabIndex=0, else -1
     cursorItemIndex: number; // item the keyboard cursor is on, else -1
     cursorRef: (el: HTMLDivElement | null) => void;
@@ -47,7 +46,6 @@ export const TimelineRow = memo(function TimelineRow({
     group,
     isFirst,
     isLast,
-    measureRef,
     tabbableItemIndex,
     cursorItemIndex,
     cursorRef,
@@ -56,7 +54,6 @@ export const TimelineRow = memo(function TimelineRow({
     return (
         <div
             data-index={index}
-            ref={measureRef}
             role="presentation"
             style={{ ...rowWrapperBaseStyle, transform: `translateY(${start}px)` }}
         >

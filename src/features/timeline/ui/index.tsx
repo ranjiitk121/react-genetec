@@ -10,13 +10,13 @@ import { nextFocusPosition } from '../shared/utils';
 import { initTimelineState, timelineReducer } from '../state/timeline-reducer';
 import { cardHeaderSx, cardSx, paperSx } from './index.styles';
 import { TimelineRow } from './timeline-row';
+import { EVENT_ITEM_HEIGHT } from './timeline-row.styles';
 import { TimelineSkeleton } from './timeline-skeleton';
 
 export { TimelineSkeleton } from './timeline-skeleton';
 
-const PADDING = 24;
-const PER_EVENT = 54;
-const GAP = 8;
+const GROUP_PADDING = 24;
+const EVENT_GAP = 8;
 const OVERSCAN = 20;
 
 const KEY_TO_DIRECTION: Record<string, Direction> = {
@@ -43,7 +43,7 @@ export function Timeline({ events, groups, isPending }: TimelineProps) {
         getScrollElement: () => scrollRef.current,
         estimateSize: (index) => {
             const count = groupSizes[index];
-            return PADDING + count * PER_EVENT + (count - 1) * GAP;
+            return GROUP_PADDING + count * EVENT_ITEM_HEIGHT + (count - 1) * EVENT_GAP;
         },
         overscan: OVERSCAN,
     });
@@ -122,7 +122,6 @@ export function Timeline({ events, groups, isPending }: TimelineProps) {
                             group={groups[virtualRow.index]}
                             isFirst={virtualRow.index === 0}
                             isLast={virtualRow.index === groups.length - 1}
-                            measureRef={virtualizer.measureElement}
                             tabbableItemIndex={
                                 tabStop.groupIndex === virtualRow.index ? tabStop.itemIndex : -1
                             }

@@ -41,6 +41,8 @@ export const dotSx: SxProps<Theme> = {
 
 export const eventsSx: SxProps<Theme> = { flex: 1, pb: 3 };
 
+export const EVENT_ITEM_HEIGHT = 44;
+
 // Native :focus-visible ring (keyboard focus only); scroll-margin gives room when scrolled into view.
 export const eventItemSx: SxProps<Theme> = {
     display: 'flex',
@@ -49,7 +51,7 @@ export const eventItemSx: SxProps<Theme> = {
     gap: 1.5,
     px: 1,
     mx: -1,
-    minHeight: 44,
+    height: EVENT_ITEM_HEIGHT,
     borderRadius: 1,
     scrollMarginBlock: 8,
     outline: 'none',
