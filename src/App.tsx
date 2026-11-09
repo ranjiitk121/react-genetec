@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Snackbar from '@mui/material/Snackbar';
@@ -8,22 +9,41 @@ import { QueryBoundary } from './components/query-boundary';
 import { DataGrid, DataGridSkeleton } from './features/data-grid';
 import { EventForm, type EventFormValues } from './features/event-form';
 import { Timeline, TimelineSkeleton, type TimelineEvent } from './features/timeline';
-import { useEvents } from './hooks/use-events';
 import { eventColumns } from './mocks/generate-timeline-data';
+import { fetchEvents } from './mocks/fetch-events';
 
 const SUCCESS_TIMEOUT_MS = 6000;
 
 function App() {
+    const queryClient = useQueryClient();
     const [view, setView] = useState<View>('timeline');
     const [formOpen, setFormOpen] = useState(false);
     const [savedMessage, setSavedMessage] = useState('');
 
-    const { events, status, error, isFetching, addEvent, reload, simulateError } = useEvents();
+    const nextId = useRef(0);
+    const failRef = useRef(false);
+
+    const { data, status, error, refetch, isFetching } = useQuery({
+        queryKey: ['events'],
+        queryFn: () => fetchEvents({ count: 200_000, fail: failRef.current }),
+    });
+    const events = data ?? [];
 
     function handleSave(values: EventFormValues) {
-        addEvent(values);
+        const event: TimelineEvent = { id: `new-${nextId.current++}`, ...values };
+        queryClient.setQueryData<TimelineEvent[]>(['events'], (prev) => [event, ...(prev ?? [])]);
         setFormOpen(false);
         setSavedMessage(`“${values.title}” was added to the grid and the timeline.`);
+    }
+
+    function reload() {
+        failRef.current = false;
+        refetch();
+    }
+
+    function simulateError() {
+        failRef.current = true;
+        refetch();
     }
 
     return (
@@ -38,6 +58,7 @@ function App() {
             <Snackbar
                 open={!!savedMessage}
                 autoHideDuration={SUCCESS_TIMEOUT_MS}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 onClose={(_event, reason) => {
                     if (reason === 'clickaway') return;
                     setSavedMessage('');

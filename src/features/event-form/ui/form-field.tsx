@@ -7,16 +7,25 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineRounded';
 
 import { errorIconSx, errorTextSx, hintTextSx, labelSx, requiredMarkSx } from './index.styles';
 
+type FieldControlProps = {
+    id: string;
+    required?: boolean;
+    'aria-describedby'?: string;
+};
+
 type FormFieldProps = {
     id: string;
     label: string;
     required?: boolean;
     error?: string;
     hint?: string;
-    children: ReactNode;
+    children: (control: FieldControlProps) => ReactNode;
 };
 
 export function FormField({ id, label, required, error, hint, children }: FormFieldProps) {
+    const helperId = `${id}-helper`;
+    const describedBy = error || hint ? helperId : undefined;
+
     return (
         <FormControl fullWidth error={Boolean(error)}>
             <FormLabel htmlFor={id} sx={labelSx}>
@@ -27,14 +36,18 @@ export function FormField({ id, label, required, error, hint, children }: FormFi
                     </Box>
                 )}
             </FormLabel>
-            {children}
+            {children({ id, required, 'aria-describedby': describedBy })}
             {error ? (
-                <FormHelperText sx={errorTextSx}>
+                <FormHelperText id={helperId} sx={errorTextSx}>
                     <ErrorOutlineIcon sx={errorIconSx} />
                     {error}
                 </FormHelperText>
             ) : (
-                hint && <FormHelperText sx={hintTextSx}>{hint}</FormHelperText>
+                hint && (
+                    <FormHelperText id={helperId} sx={hintTextSx}>
+                        {hint}
+                    </FormHelperText>
+                )
             )}
         </FormControl>
     );

@@ -77,14 +77,16 @@ export function EventForm({ open, onSave, onClose, initialValues }: EventFormPro
                         )}
 
                         <FormField id="ef-title" label="Title" required error={errors.title}>
-                            <OutlinedInput
-                                id="ef-title"
-                                size="small"
-                                inputRef={titleRef}
-                                value={draft.title}
-                                onChange={(event) => updateField('title', event.target.value)}
-                                placeholder="e.g. Deploy API gateway"
-                            />
+                            {(field) => (
+                                <OutlinedInput
+                                    {...field}
+                                    size="small"
+                                    inputRef={titleRef}
+                                    value={draft.title}
+                                    onChange={(event) => updateField('title', event.target.value)}
+                                    placeholder="e.g. Deploy API gateway"
+                                />
+                            )}
                         </FormField>
 
                         <FormField
@@ -94,14 +96,16 @@ export function EventForm({ open, onSave, onClose, initialValues }: EventFormPro
                             error={errors.date}
                             hint="Defaults to today"
                         >
-                            <OutlinedInput
-                                id="ef-date"
-                                type="date"
-                                size="small"
-                                inputRef={dateRef}
-                                value={draft.date}
-                                onChange={(event) => updateField('date', event.target.value)}
-                            />
+                            {(field) => (
+                                <OutlinedInput
+                                    {...field}
+                                    type="date"
+                                    size="small"
+                                    inputRef={dateRef}
+                                    value={draft.date}
+                                    onChange={(event) => updateField('date', event.target.value)}
+                                />
+                            )}
                         </FormField>
 
                         <StatusSelect
