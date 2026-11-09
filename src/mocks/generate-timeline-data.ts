@@ -1,4 +1,12 @@
+import type { Column } from '../features/data-grid';
 import type { EventStatus, TimelineEvent } from '../features/timeline';
+
+// Columns for showing the same events in the DataGrid (Title / Date / Status).
+export const eventColumns: Column<TimelineEvent>[] = [
+    { id: 'title', label: 'Title', accessor: (event) => event.title, sortable: true },
+    { id: 'date', label: 'Date', accessor: (event) => event.date, sortable: true },
+    { id: 'status', label: 'Status', accessor: (event) => event.status, sortable: true },
+];
 
 export const timelineEvents: TimelineEvent[] = [
     { id: 'e1', date: '2025-12-15', status: 'completed', title: 'Beta Program' },
@@ -34,8 +42,6 @@ function isoDay(date: Date): string {
     return `${year}-${month}-${day}`;
 }
 
-// Deterministic stress data: `count` events spread over consecutive days (1–4 per day), walking
-// backwards from a fixed base date. Same count always yields the same events (stable renders).
 export function generateTimelineEvents(count = 100_000): TimelineEvent[] {
     const base = new Date(2025, 11, 15); // local Dec 15 2025 — no string parsing, no timezone
     const events: TimelineEvent[] = [];
