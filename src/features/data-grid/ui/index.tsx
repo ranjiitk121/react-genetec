@@ -53,6 +53,7 @@ export function DataGrid<TRow>({
         () => getVisibleColumns(columns, visibility),
         [columns, visibility],
     );
+
     const filteredRows = useMemo(
         () => getFilteredRows(rows, columns, debouncedFilters),
         [rows, columns, debouncedFilters],
@@ -66,6 +67,7 @@ export function DataGrid<TRow>({
     const overlay = selectOverlay(state.overlay, columns);
     const hasActiveFilter = hasActiveFilters(filters);
     const closeOverlay = () => dispatch({ type: 'overlayClosed' });
+
     const changeFilter = (value: string) => {
         if (overlay.filterColumnId) {
             dispatch({ type: 'filterChanged', columnId: overlay.filterColumnId, value });
@@ -83,8 +85,6 @@ export function DataGrid<TRow>({
             <Table
                 aria-label={label}
                 sx={{
-                    // Fixed layout so column widths don't resize to each sorted page's content
-                    // (which caused columns to shift on sort). Widths stay constant; cells clip.
                     tableLayout: 'fixed',
                     '& td': { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
                 }}

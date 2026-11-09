@@ -29,32 +29,34 @@ export function getSortedRows<TRow>(
     return decorated.map((d) => d.row);
 }
 
-/**
- * Single source of truth for "is this column visible right now", working from
- * the sparse override map + the column's own `hidden` default. Both the reducer
- * (when toggling) and the render pass (when filtering columns) call this, so the
- * two can never disagree on what the default is.
- */
-export const resolveVisibility = (
+// Declared as named functions (not arrow consts) so they show up by name in the
+// Performance profiler's bottom-up / call tree instead of as "(anonymous)".
+export function resolveVisibility(
     visibility: ColumnVisibility,
     columnId: string,
     hidden?: boolean,
-): boolean => visibility[columnId] ?? !hidden;
+): boolean {
+    return visibility[columnId] ?? !hidden;
+}
 
-export const isColumnVisible = <TRow>(col: Column<TRow>, visibility: ColumnVisibility): boolean =>
-    resolveVisibility(visibility, col.id, col.hidden);
+export function isColumnVisible<TRow>(col: Column<TRow>, visibility: ColumnVisibility): boolean {
+    return resolveVisibility(visibility, col.id, col.hidden);
+}
 
-export const getVisibleColumns = <TRow>(
+export function getVisibleColumns<TRow>(
     columns: Column<TRow>[],
     visibility: ColumnVisibility,
-): Column<TRow>[] => columns.filter((col) => isColumnVisible(col, visibility));
+): Column<TRow>[] {
+    return columns.filter((col) => isColumnVisible(col, visibility));
+}
 
-/** Slice out the rows for the current page. */
-export const paginate = <TRow>(rows: TRow[], page: number, rowsPerPage: number): TRow[] =>
-    rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+export function paginate<TRow>(rows: TRow[], page: number, rowsPerPage: number): TRow[] {
+    return rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+}
 
-export const hasActiveFilters = (filters: FilterState): boolean =>
-    Object.values(filters).some((value) => (value ?? '').trim() !== '');
+export function hasActiveFilters(filters: FilterState): boolean {
+    return Object.values(filters).some((value) => (value ?? '').trim() !== '');
+}
 
 function rowMatchesFilters<TRow>(
     row: TRow,

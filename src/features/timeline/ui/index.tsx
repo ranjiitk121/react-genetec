@@ -5,15 +5,15 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 
-import type { Direction, TimelineEvent } from '../shared/types';
-import { groupEventsByDay, nextFocusPosition } from '../shared/utils';
+import type { Direction, TimelineEvent, TimelineGroup } from '../shared/types';
+import { nextFocusPosition } from '../shared/utils';
 import { initTimelineState, timelineReducer } from '../state/timeline-reducer';
 import { cardHeaderSx, cardSx, paperSx } from './index.styles';
 import { TimelineRow } from './timeline-row';
+import { TimelineSkeleton } from './timeline-skeleton';
 
 export { TimelineSkeleton } from './timeline-skeleton';
 
-// Exact per-row height: PADDING + events × PER_EVENT + (events − 1) × GAP.
 const PADDING = 24;
 const PER_EVENT = 54;
 const GAP = 8;
@@ -28,10 +28,11 @@ const KEY_TO_DIRECTION: Record<string, Direction> = {
 
 type TimelineProps = {
     events: TimelineEvent[];
+    groups: TimelineGroup[];
+    isPending: boolean;
 };
 
-export function Timeline({ events }: TimelineProps) {
-    const groups = useMemo(() => groupEventsByDay(events), [events]);
+export function Timeline({ events, groups, isPending }: TimelineProps) {
     const groupSizes = useMemo(() => groups.map((group) => group.events.length), [groups]);
 
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -89,8 +90,12 @@ export function Timeline({ events }: TimelineProps) {
         ? focus
         : { groupIndex: virtualItems[0]?.index ?? focus.groupIndex, itemIndex: 0 };
 
+    if (isPending && groups.length === 0) {
+        return <TimelineSkeleton />;
+    }
+
     return (
-        <Box sx={cardSx}>
+        <Box sx={{ ...cardSx, ...(isPending && { opacity: 0.6, transition: 'opacity 150ms' }) }}>
             <Box sx={cardHeaderSx}>
                 <Typography variant="subtitle1">Timeline</Typography>
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>

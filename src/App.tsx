@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { Activity, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
@@ -9,11 +9,17 @@ import { EventsHeader, type View } from './components/events-header';
 import { QueryBoundary } from './components/query-boundary';
 import { DataGrid, DataGridSkeleton } from './features/data-grid';
 import { EventForm, type EventFormValues } from './features/event-form';
-import { Timeline, TimelineSkeleton, type TimelineEvent } from './features/timeline';
+import {
+    Timeline,
+    TimelineSkeleton,
+    useTimelineGroups,
+    type TimelineEvent,
+} from './features/timeline';
 import { eventColumns } from './mocks/generate-timeline-data';
 import { fetchEvents } from './mocks/fetch-events';
 
 const SUCCESS_TIMEOUT_MS = 6000;
+const EMPTY_EVENTS: TimelineEvent[] = [];
 
 function App() {
     const queryClient = useQueryClient();
@@ -28,7 +34,8 @@ function App() {
         queryKey: ['events'],
         queryFn: () => fetchEvents({ count: 100_000, fail: failRef.current }),
     });
-    const events = data ?? [];
+    const events = data ?? EMPTY_EVENTS;
+    const { groups, isPending: groupsPending } = useTimelineGroups(events);
 
     function handleSave(values: EventFormValues) {
         const event: TimelineEvent = { id: `new-${nextId.current++}`, ...values };
@@ -71,7 +78,7 @@ function App() {
             </Snackbar>
 
             <Box sx={{ mt: 3 }}>
-                {view === 'timeline' && (
+                <Activity mode={view === 'timeline' ? 'visible' : 'hidden'}>
                     <QueryBoundary
                         status={status}
                         isFetching={isFetching}
@@ -80,12 +87,12 @@ function App() {
                         loadingFallback={<TimelineSkeleton />}
                     >
                         <AppErrorBoundary title="The timeline couldn’t render" resetKeys={[events]}>
-                            <Timeline events={events} />
+                            <Timeline events={events} groups={groups} isPending={groupsPending} />
                         </AppErrorBoundary>
                     </QueryBoundary>
-                )}
+                </Activity>
 
-                {view === 'grid' && (
+                <Activity mode={view === 'grid' ? 'visible' : 'hidden'}>
                     <QueryBoundary
                         status={status}
                         isFetching={isFetching}
@@ -104,7 +111,7 @@ function App() {
                             />
                         </AppErrorBoundary>
                     </QueryBoundary>
-                )}
+                </Activity>
             </Box>
             <EventForm
                 key={formOpen ? 'open' : 'closed'}

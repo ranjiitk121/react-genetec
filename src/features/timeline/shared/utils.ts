@@ -26,15 +26,50 @@ export function groupEventsByDay(events: TimelineEvent[]): TimelineGroup[] {
     return groups;
 }
 
-// Colour family per status; statusSx picks the shade that clears WCAG AA contrast per theme.
+function yieldToMain(): Promise<void> {
+    const sched = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+    if (sched?.yield) return sched.yield();
+    return new Promise((resolve) => setTimeout(resolve));
+}
+
+const GROUP_CHUNK = 10_000;
+
+export async function groupEventsByDayAsync(
+    events: TimelineEvent[],
+    isCancelled: () => boolean,
+): Promise<TimelineGroup[]> {
+    const byDay = new Map<string, TimelineEvent[]>();
+    for (let i = 0; i < events.length; i += GROUP_CHUNK) {
+        const end = Math.min(i + GROUP_CHUNK, events.length);
+        for (let j = i; j < end; j++) {
+            const event = events[j];
+            const bucket = byDay.get(event.date);
+            if (bucket) {
+                bucket.push(event);
+            } else {
+                byDay.set(event.date, [event]);
+            }
+        }
+        if (end < events.length) {
+            await yieldToMain();
+            if (isCancelled()) return [];
+        }
+    }
+
+    const groups: TimelineGroup[] = [];
+    for (const [dayKey, dayEvents] of byDay) {
+        groups.push({ dayKey, label: formatDayLabel(dayKey), events: dayEvents });
+    }
+    groups.sort((a, b) => (a.dayKey < b.dayKey ? 1 : a.dayKey > b.dayKey ? -1 : 0));
+    return groups;
+}
+
 export const STATUS_COLOR_MAP: Record<EventStatus, 'success' | 'secondary' | 'error'> = {
     completed: 'success',
     initiated: 'secondary',
     started: 'error',
 };
 
-// Two-level navigation over per-group event counts: up/down step events across days, left/right jump
-// days. Returns `pos` unchanged at an edge, so callers detect a no-op by identity.
 export function nextFocusPosition(
     groupSizes: number[],
     pos: FocusPosition,
